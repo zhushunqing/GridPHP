@@ -514,10 +514,11 @@ class gridphp_module{
 			if($this->getConf('HTTP_CONFIG', $fun, 'timeout'))
 				$conf['timeout'] = $this->getConf('HTTP_CONFIG',$fun, 'timeout');
 		}
+		$conf['encode'] = isset($conf['encode']) ? $conf['encode'] : 'json';
 
 		$data['module'] = $mod;
 		$data['function'] = $fun;
-		$data['encode'] = ($conf['encode']) ? $conf['encode'] : 'json';
+		$data['encode'] = $conf['encode'];
 
 		if($conf['encode'] == 'serialize'){
 			$data['args'] = serialize($args);
