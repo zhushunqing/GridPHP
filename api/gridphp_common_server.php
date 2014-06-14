@@ -55,7 +55,7 @@ if($iserialize){
 	if(isset($_POST['multidata']))
 		$multi = $GP->utility->json->decode($_POST['multidata'], 1);
 }
-/*
+
 if(!$multi)
 	$multi = array(
 		array(
@@ -65,7 +65,7 @@ if(!$multi)
 			'types'		=> $_POST['types'],
 		)
 	);
-*/
+
 $rs = array();
 foreach($multi as $t){
 
