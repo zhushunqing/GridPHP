@@ -10,7 +10,7 @@ class modexample_implements extends gridphp_implements{
 	* 请注意：不要使用默认构造函数 __construct() 或类同名函数modexample_implements()初始化
 	* _Init_()方法遵从Lazy Initialization延迟初始化原则，在初次调用时才初始化所需资源1次，之后调用不重复执行。
 	*/	
-	function _Init_() {
+	public function _Init_() {
 		//"implements _Init_ Once\n";
 		$this->loadC('subclass'); //初始化加载subclass子类
 	}
@@ -20,7 +20,7 @@ class modexample_implements extends gridphp_implements{
     * @param string $s
     * @return void
     */ 
-    function hello1($s){
+    public function hello1($s){
 		return "1. Hello1, I am {$s}!";
 	}
 
@@ -29,7 +29,7 @@ class modexample_implements extends gridphp_implements{
     * @param string $s
     * @return string
     */ 
-    function hello2($s){
+    public function hello2($s){
 		return "2. Hello2, I am {$s}!";
 	}
 
@@ -38,7 +38,7 @@ class modexample_implements extends gridphp_implements{
     * @param string $s
     * @return string
     */ 
-    function hello3(){
+    public function hello3(){
 		//调用subclass方法
 		return "3. Hello3, " . $this->subclass->do_something();
 	}

@@ -403,7 +403,7 @@ class gridphp_module{
 		// $mod = substr($class, 4); //strtolower(substr($class, 4));
 		$http = $this->useHTTP($fun);
 		if(!$this->lazyInit){
-			if(!$http){
+			if(!$http || !GRIDPHP_HTTP_SWITCH){
 				$this->lazyInit = 1;
 				$this->loadC('implements');
 				$this->_Init_();

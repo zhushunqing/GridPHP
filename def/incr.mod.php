@@ -11,14 +11,14 @@ class gridphp_incr extends gridphp_module{
 	* @param int $step 步长
 	* @return bigint
 	*/
-	function &get_incr_id($key, $step = 1){ return $this->_callImplements(); }
+	public function &get_incr_id($key, $step = 1){ return $this->_callImplements(); }
 
 	/**
 	* 生成一个key的区域唯一ID
 	* @param string $key 标识
 	* @return bigint
 	*/
-	function &get_zone_id($key){ return $this->_callImplements(); }
+	public function &get_zone_id($key){ return $this->_callImplements(); }
 
 	
 	/**
@@ -26,14 +26,14 @@ class gridphp_incr extends gridphp_module{
 	* @param int $id
 	* @return int
 	*/
-	function &get_id_zone($id){ return $this->_callImplements(); }
+	public function &get_id_zone($id){ return $this->_callImplements(); }
 
 	/**
 	* 通过name取incr数值
 	* @param string $name
 	* @return int
 	*/
-	function &get_incr_value($name) { return $this->_callImplements(); }
+	public function &get_incr_value($name) { return $this->_callImplements(); }
 }
 
 ?>

@@ -12,7 +12,7 @@ class gridphp_utility extends gridphp_module{
 	* @param int $p 记录点
 	* @return void
 	*/
-	function setTimerPoint($p){
+	public function setTimerPoint($p){
 		$this->timerCounter[$p] = $this->getMsec();
 	}
 
@@ -21,7 +21,7 @@ class gridphp_utility extends gridphp_module{
 	* @param int $p 记录点
 	* @return int 毫秒
 	*/
-	function getTimerDiff($p){
+	public function getTimerDiff($p){
 		return isset($this->timerCounter[$p]) ? number_format($this->getMsec() - $this->timerCounter[$p], 2, '.', '') : 0;
 	}
 	
@@ -29,7 +29,7 @@ class gridphp_utility extends gridphp_module{
 	* 得到当前毫秒(自2011-01-01起)
 	* @return float MilliSecond
 	*/
-	function getMsec(){
+	public function getMsec(){
 		list($usec, $sec) = explode(" ",microtime()); 
 		return ( ((float)$sec - 1293811200) + (float)$usec) * 1000; //1293811200 = strtotime('2011-01-01')
 	}

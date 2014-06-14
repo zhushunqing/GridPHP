@@ -8,7 +8,7 @@ class gridphp_errmsg extends GRIDPHP_Module{
 	/**
 	* 显示出错页面/信息
 	*/
-	function show($info, $tmpl = 'default'){
+	public function show($info, $tmpl = 'default'){
 		if(is_array($info)){
 			$tmpl = $this->getConf('TMPL', $tmpl);
 			if($tmpl)
@@ -21,7 +21,7 @@ class gridphp_errmsg extends GRIDPHP_Module{
 	}
 
 	//替换文本里的{xxx}标签
-	function replaceLable($text, $lables){
+	public function replaceLable($text, $lables){
 		preg_match_all("/{(.+?)}/", $text, $matches);
 		list($lable, $name) = $matches;
 		for($i = 0; $i < count($lable); $i ++)

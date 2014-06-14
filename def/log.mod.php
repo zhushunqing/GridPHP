@@ -12,7 +12,7 @@ class gridphp_log extends gridphp_module{
 	* @param $t 类型 c => cache, s => server, h => http
 	* @return void
 	*/
-	function callog($m, $f, $t = ''){
+	public function callog($m, $f, $t = ''){
 
 		//方法调用计数
 		$method = $m . '->' . $f;
@@ -56,7 +56,7 @@ class gridphp_log extends gridphp_module{
 	* @param string $uniq 唯一性标识
 	* @return bool, int
 	*/
-	function checkpoint($class, $tag, $uniq = null){
+	public function checkpoint($class, $tag, $uniq = null){
 		if($class && $tag){
 			$key = $class . '-' . $tag;
 			$memc = $this->memcd->loadMemc('checkpoint');
@@ -84,7 +84,7 @@ class gridphp_log extends gridphp_module{
 	* @param string $form 来源
 	* @return bool
 	*/
-	function checkpoint_code($code, $uniq = false, $from = false){
+	public function checkpoint_code($code, $uniq = false, $from = false){
 		$conf = $this->getConf('CHECKPOINT', $code);
 		$from = strtoupper($from);
 		if($conf){
@@ -99,7 +99,7 @@ class gridphp_log extends gridphp_module{
 	/**
 	* 取出checkpoint的计数值
 	*/
-	function getpoint($class, $tag){
+	public function getpoint($class, $tag){
 		if($class && $tag){
 			$key = $class . '-' . $tag;
 			$memc = $this->memcd->loadMemc('checkpoint');
@@ -114,7 +114,7 @@ class gridphp_log extends gridphp_module{
 	* @param int $code 配置代码
 	* @param string $form 来源
 	*/
-	function getpoint_code($code, $from = ''){
+	public function getpoint_code($code, $from = ''){
 		$conf = $this->getConf('CHECKPOINT', $code);
 		$from = strtoupper($from);
 		if($conf){
@@ -134,7 +134,7 @@ class gridphp_log extends gridphp_module{
 	* @param string 类型 天 or 48点
 	* @return bool
 	*/
-	function insPointdata2DB($class, $tag, $count, $date='', $type= 'day') {
+	public function insPointdata2DB($class, $tag, $count, $date='', $type= 'day') {
 		if($class && $tag) {
 			$key = $class . '-' . $tag;
 			$key = 'gridphp_checkpoint_' . md5($key);
@@ -162,7 +162,7 @@ class gridphp_log extends gridphp_module{
 	* @param string $tag 标签
 	* @return int 数值
 	*/
-	function countpoint($class, $tag, $numb){
+	public function countpoint($class, $tag, $numb){
 		if($class && $tag){
 			$numb = intval($numb);
 			$key = $class . '-' . $tag;
@@ -179,7 +179,7 @@ class gridphp_log extends gridphp_module{
 	 * @param array $tlog
 	 * @return boolean
 	 */
-	function tracelog($tlog){
+	public function tracelog($tlog){
 		if(is_array($tlog)){
 			$tlog['timer'] = time();
 			$tlog = json_encode($tlog);
@@ -191,7 +191,7 @@ class gridphp_log extends gridphp_module{
 	/**
 	* 取出1条tracelog
 	*/
-	function get_tracelog(){
+	public function get_tracelog(){
 		$memc = $this->memcd->loadMemc('tracelog');
 		$tlog = $memc->listShift('tracelog');
 		if($tlog){
@@ -204,7 +204,7 @@ class gridphp_log extends gridphp_module{
 	/**
 	* 写入syslog
 	*/
-	function syslog($info = '', $level = 1){
+	public function syslog($info = '', $level = 1){
 		$trace = debug_backtrace();
 		$trace = $trace[$level];
 		$log = $_SERVER['SERVER_ADDR'] . "\t" . $_SERVER['REQUEST_URI'] . "\t" . $trace['class'] . "\t" . $trace['function'] . "\t" . $info . "\t" . var_export($trace['args'], 1);
@@ -216,7 +216,7 @@ class gridphp_log extends gridphp_module{
 	/**
 	* 写入日志文件
 	*/
-	function writelog($file, $info){
+	public function writelog($file, $info){
 		if(is_array($info)){
 			$string = '';
 			foreach ($info as $k => $v)
@@ -240,7 +240,7 @@ class gridphp_log extends gridphp_module{
 	 * $config["content"] 报警内容
 	 * $config["value"]=array("v1"=>11,"v2"=>22); 传递给服务器的数值
 	 */
-	function alarm_interface($id, $config=array()){
+	public function alarm_interface($id, $config=array()){
 		$id = intval($id);
 		if ($id <= 0) return false;
 		$para = serialize($config);

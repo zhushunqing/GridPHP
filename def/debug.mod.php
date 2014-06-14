@@ -7,7 +7,7 @@ class gridphp_debug extends gridphp_module{
 
 	var $debug = 0, $count = 0, $level = 0;
 
-	function _Init_(){
+	public function _Init_(){
 		$this->debug = (
 			//只在本地和测试机上生效
 			in_array($this->getServerEnv(), array('', 'server', 'local', 'dev', 'sae'))
@@ -19,11 +19,11 @@ class gridphp_debug extends gridphp_module{
 	}
 
 	//是否测试环境
-	function isDebug(){
+	public function isDebug(){
 		return $this->debug;
 	}
 
-	function setDebug($l){
+	public function setDebug($l){
 		if($l){
 			$this->debug = true;
 			$this->level = $l;
@@ -39,7 +39,7 @@ class gridphp_debug extends gridphp_module{
 	* @param int $d depth 打印函数调用信息debug_backtrace深度
 	* @return void
 	*/
-	function dump($v, $l = 0, $d = 0){
+	public function dump($v, $l = 0, $d = 0){
 		if($this->debug && $this->level == $l){
 			$trace = debug_backtrace();
 			$info = "\n<!--\nDEBUG " . (++ $this->count) . ' ' . $this->utility->getTimerDiff('debug') . "ms\n";
@@ -50,7 +50,7 @@ class gridphp_debug extends gridphp_module{
 				$info .= 'file: ' . $trace[$i]['file']
 					. ' line: ' . $trace[$i]['line']
 					. "\n"
-					. $trace[$i]['class'] . '->' . $trace[$i]['function']
+					. $trace[$i]['class'] . '->' . $trace[$i]['public function']
 					. '(' . var_export($trace[$i]['args'], 1) . ')'
 					. "\n\n";
 			$info .= "--------------------------------------------------------------------\n"
