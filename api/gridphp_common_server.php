@@ -4,65 +4,52 @@
 * @author ZhuShunqing
 */
 
-//使用serialize或json编码数据
-$encode = isset($_GET['encode']) ? $_GET['encode'] : 'json';
-$iserialize = ($encode == 'serialize');
-
-if(isset($_GET['gz']) && $_GET['gz']){
-	$data = gzuncompress(file_get_contents("php://input"));
-	if($iserialize)
-		$_POST = unserialize($data);
-	else
-		$_POST = json_decode($data);
-}
-
-$_SERVER['REMOTE_ADDR'] = isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+$_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_FORWARDED_FOR'] ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
 header('SERVER-ADDR: ' . $_SERVER['SERVER_ADDR']);
 header('REMOTE-ADDR: ' . $_SERVER['REMOTE_ADDR']);
-header('DATA-ENCODEING: ' . $encode);
 
 $timer = getMsec();
 
 //防止外部调用
-// check_request();
+//check_request();
 
 //注册退出调用
 register_shutdown_function('shutdown_function_slowlog');
 
-//去除转义符
-strip_post();
+define('GRIDPHP_HTTP_SWITCH', 0); //Server模式关闭HTTP方式
+require_once('../GridPHP.inc.php');
+$GP = &$GLOBALS['GRIDPHP'];
+
+//get_magic_quotes_gpc自动转义
+$request = $GP->utility->loadC('request');
+$request->strip_request();
 
 //根据client端传递参数设置服务端PHP操时
-$timeout = intval($_GET['timeout']);
-$timeout = ($timeout > 0) ? $timeout : 10;
+$timeout = $request->getQuery('timeout', 'intval', 10);
 @set_time_limit($timeout);
 
-if(defined('SAE_APPNAME'))
-	define('GRIDPHP_SERVER_ENV', 'sae');
-else
-	define('GRIDPHP_SERVER_ENV', 'server');
-require_once('../GridPHP.inc.php');
-$GP = $GLOBALS['GRIDPHP'];
+//使用serialize或json编码数据 php4下json效率极差
+$encode = $request->getPost('encode', 'string', 'json');
+header('DATA-ENCODEING: ' . $encode);
+$iserialize = ($encode == 'serialize');
 
 //请求数据校验
 check_sign();
 
-$multi = null;
 if($iserialize){
-	$multi = unserialize($_POST['multidata']);
+	$multi = unserialize($request->getPost('multidata'));
 }else{
 	$GP->utility->loadC('json');
-	if(isset($_POST['multidata']))
-		$multi = $GP->utility->json->decode($_POST['multidata'], 1);
+	$multi = $GP->utility->json->decode($request->getPost('multidata'), 1);
 }
 
 if(!$multi)
 	$multi = array(
 		array(
-			'module'	=> $_POST['module'],
-			'function'	=> $_POST['function'],
-			'args'		=> $_POST['args'],
-			'types'		=> $_POST['types'],
+			'module'	=> $request->getPost('module'),
+			'function'	=> $request->getPost('function'),
+			'args'		=> $request->getPost('args'),
+			'types'		=> $request->getPost('types'),
 		)
 	);
 
@@ -84,8 +71,8 @@ foreach($multi as $t){
 	}
 
 	if($mod && $GP->mod($mod)){
-		$GP->$mod->setHTTP($fun, 0); //保证HTTP模式已关闭
 		$data = call_user_func_array(array(&$GP->$mod, $fun), $args);
+
 	}else{
 		//模块不存在
 		$data = array('status' => -1);
@@ -111,7 +98,8 @@ if($iserialize){
 }else{
 	$types = $GP->utility->json->objtypes($rs);
 	$data->types = $types;
-	$out = $GP->utility->json->encode($data);;
+	//$out = $GP->utility->json->encode($data);
+	$out = json_encode($data);
 }
 
 print $out;
@@ -123,19 +111,10 @@ exit(1);
 
 //请求数据校验
 function check_sign(){
-	global $GP;
-	if($_POST['sign'] !== $GP->httpsign($_POST)){
+	global $GP, $request;
+	if($request->getPost('sign') != $GP->httpsign($_POST)){
 		die('Invaild request!');
 	}
-}
-
-/*
- * 去除转义符
- */
-function strip_post(){
-	if(get_magic_quotes_gpc())
-		foreach($_POST as $k => $v)
-				$_POST[$k] = stripslashes($v);
 }
 
 /**
@@ -144,8 +123,6 @@ function strip_post(){
 function check_request(){
 	if(
 		substr($_SERVER['REMOTE_ADDR'], 0, 3) != '10.'
-		&&
-		substr($_SERVER['REMOTE_ADDR'], 0, 12) != '124.' . '193.' . '193.' //办公环境测试
 	){
 		header("HTTP/1.0 403 Forbidden");
 		die('Forbidden!');
@@ -172,7 +149,7 @@ function shutdown_function_slowlog(){
 	if(false && $timer > 50){
 		$log = $_SERVER['REMOTE_ADDR'] . "\t";
 		$log .= date('Y-m-d H:i:s') . "\t";
-		$log .= strlen($_POST['multidata']) . "\t";
+		$log .= strlen($request->getPost('multidata')) . "\t";
 		$log .= $num . "\t";
 		$log .= $timer . "\t";
 		$log .= "\n";
