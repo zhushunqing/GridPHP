@@ -128,6 +128,17 @@ class gridphp_http extends gridphp_module{
 	}
 
 	/**
+	* 发起sockt get请求
+	* @param string $host 主机IP
+	* @param int $port 端口
+	* @param string $data
+	* @param int $timeout 超时设置
+	* @param string $endmark 结束符（默认换行符）
+	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 -1003不支持socket方法 其它同http 404 200等)
+	*/
+	function &sockget($host, $port, $data, $timeout, $endmark = "\n"){ return $this->_callImplements(); }
+
+	/**
 	* 等待接收数据
 	* @param int $timeout 超时ms
 	*/

@@ -258,13 +258,33 @@ class http_implements extends gridphp_implements{
 	}
 
 	/**
+	* 发起sockt get请求
+	* @param string $host 主机IP
+	* @param int $port 端口
+	* @param string $data
+	* @param int $timeout 超时设置
+	* @param string $endmark 结束符（默认换行符）
+	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 -1003不支持socket方法 其它同http 404 200等)
+	*/
+	function &sockget($host, $port, $data, $timeout, $endmark = "\n"){
+
+		//不支持socket方法
+		if(!function_exists('socket_create')) return array('status' => GRIDPHP_HTTP_ERR_NO_SOCKET);
+
+		$rs = &$this->_requestData($host, $port, $data, $endmark);
+		if($timeout !== GRIDPHP_HTTP_NONBLOCK) $this->sendRequest($timeout);
+		return $rs;
+	}
+
+	/**
 	* 准备发送数据
 	*/
-	function &_requestData($host, $port, $data){
+	function &_requestData($host, $port, $data, $endmark = ''){
 		$idx = count($this->_sockets);
 		$this->_sockets[$idx]['host'] = $host;
 		$this->_sockets[$idx]['port'] = $port;
 		$this->_sockets[$idx]['data'] = $data;
+		$this->_sockets[$idx]['mark'] = $endmark;
 		return $this->_response[$idx];
 	}
 
@@ -431,13 +451,20 @@ class http_implements extends gridphp_implements{
 				//读取数据
 				foreach($read as $i => $socket){
 					$sockid = $resid[(int) $socket];
+					if(!$write_flag[$sockid]) break;
 					if(!is_resource($this->_sockets[$sockid]['socket']))
 						continue;
 					
 					$buff = @socket_read($socket, GRIDPHP_HTTP_READ_BUFF_LEN);
 					if($buff)
 						$this->_buffers[$sockid] .= $buff;
-					else if($buff === ''){
+					
+					if(
+						$buff === ''
+					|| 
+						(!empty($this->_sockets[$sockid]['mark']) ? 
+							strpos($buff, $this->_sockets[$sockid]['mark']) : false)
+					){
 						$this->_checks[$sockid] = true;
 						$timerend = intval($this->func->_getMsec() - $timerstart);
 						$this->_sockets[$sockid]['readtimer'] = $timerend;
@@ -501,6 +528,11 @@ class http_implements extends gridphp_implements{
 				$this->_response[$i]['status'] = $this->_sockets[$i]['socket']['error'];
 				$this->_response[$i]['error'] = $this->_sockets[$i]['socket']['errinfo'];
 
+			}
+
+			//非标准HTTP协议
+			if($this->_response[$i]['status'] == GRIDPHP_HTTP_ERR_BAD_REQUEST && !empty($this->_sockets[$i]['mark'])){
+				$this->_response[$i]['status'] = 100;
 			}
 
 			$this->_response[$i]['host'] = $this->_sockets[$i]['host'];
