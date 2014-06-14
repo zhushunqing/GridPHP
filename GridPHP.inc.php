@@ -304,6 +304,7 @@ class GRIDPHP{
 	* 例: php test.php uid=1 type=2 将得到 $_GET['uid'] = 1 和 $_GET['type'] = 2
 	*/
 	function parse_args(){
+		if(isset($_SERVER['argv']))
 		for($i = 1; $i < count($_SERVER['argv']); $i ++){
 			preg_match('/^-?(\w+?)[:=](.+)$/', $_SERVER['argv'][$i], $a);
 			if($a)

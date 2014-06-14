@@ -50,7 +50,7 @@ class gridphp_debug extends gridphp_module{
 				$info .= 'file: ' . $trace[$i]['file']
 					. ' line: ' . $trace[$i]['line']
 					. "\n"
-					. $trace[$i]['class'] . '->' . $trace[$i]['public function']
+					. $trace[$i]['class'] . '->' . $trace[$i]['function']
 					. '(' . var_export($trace[$i]['args'], 1) . ')'
 					. "\n\n";
 			$info .= "--------------------------------------------------------------------\n"

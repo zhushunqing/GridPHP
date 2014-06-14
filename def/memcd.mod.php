@@ -102,7 +102,7 @@ class gridphp_memcd extends gridphp_module{
 	*/
 	public function close(){ return $this->_callImplements(); }
 
-//Simple list queue public function
+//Simple list queue function
 //-------------------------------------------------------------------------------
 
 	/**

@@ -44,13 +44,13 @@ class utility_request{
 		$name = trim($name);
 		switch ($method){
 			case 'get':
-				$value = $_GET[$name];	
+				$value = @$_GET[$name];	
 				break;
 			case 'post':
-				$value = $_POST[$name];
+				$value = @$_POST[$name];
 				break;
 			default:
-				$value = $_REQUEST[$name];
+				$value = @$_REQUEST[$name];
 				break;
 		}
 		$value = is_null($value) ? $default : $value;
