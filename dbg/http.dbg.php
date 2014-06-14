@@ -124,8 +124,21 @@ $this->setHeader('Cache-Control', 'no-cache');
 			print "通过HTTP代理请求\n";
 			$this->setProxy('127.0.0.1', 8081);
 			$rs[] = $h->getUrl('http://zhushunqing.sinaapp.com/ip.php');
+		break;
 
+		case 12:
+			print "通过Socket请求\n";
+			// $rs[] = $h->sockget('127.0.0.1', 8000, "Hello\n", 3000);
 
+			$data = "GET /sleep.php?s=3 HTTP/1.1
+User-Agent: GRIDPHP HTTP Class
+Host: zhushunqing.sinaapp.com
+Connection: Close
+Cache-Control: no-cache
+
+";
+			$rs[] = $h->sockget('zhushunqing.sinaapp.com', 80, $data, 3000);
+			var_dump($rs);exit;
 		break;
 	}
 
