@@ -19,7 +19,7 @@ set_time_limit($timeout);
 //去除转义符
 strip_post();
 
-//处理从CMI Client端请求来的数据
+//处理从GRIDPHP Client端请求来的数据
 $mod = $_POST['module']; //模块名
 $fun = $_POST['function']; //调用方法
 $args = $_POST['args']; //接收到的参数
@@ -35,7 +35,7 @@ else
 * 输出返回数据
 */
 function gridphp_api_output($rs){
-	global $timer;
+	global $timer, $encode;
 	$timer = getMsec() - $timer;
 	//返回数据格式
 	$data = new stdClass();

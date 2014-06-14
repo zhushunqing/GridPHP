@@ -60,16 +60,16 @@ class GRIDPHP{
 						$mod->$dm = &$this->$dm;
 				}
 				
-				$mod->_modname = $m;
+				$mod->name = $m;
 				$mod->parent = &$this;
 
 				$this->$m = &$mod;
 
 				//调用默认初始化方法
-				if(method_exists($mod, '_Construct_Init_'))
-				if(!isset($this->_MOD_INITED[$c]) && method_exists($mod, '_Construct_Init_')){
+				if(method_exists($mod, '_Init_'))
+				if(!isset($this->_MOD_INITED[$c]) && method_exists($mod, '_Init_')){
 					$this->_MOD_INITED[$c] = 1;
-					$mod->_Construct_Init_();
+					$mod->_Init_();
 				}
 
 			}else{
@@ -245,6 +245,7 @@ class GRIDPHP{
 						//还原节点类型
 						if(is_object($rs->types)){
 							$types = (array) $rs[$k]->types;
+							//$this->utility->json->recover_array(&$data, $types);
 							$this->utility->json->recover_array($data, $types);
 						}else if($encode == 'json'){
 							//转成数据结构
@@ -383,8 +384,8 @@ class GRIDPHP{
 */
 class gridphp_module{
 	var $_CONFIG = array();
-	var $_lazyInited = 0;
-	var $_modname = '';
+	var $lazyInit = 0;
+	var $name = '';
 
 	/**
 	* Lazy Initialization延迟初始化，只执行一次
@@ -400,10 +401,13 @@ class gridphp_module{
 		}
 		// $class = get_class($this); //$trace['object'] ? get_class($trace['object']) : $trace['class'];
 		// $mod = substr($class, 4); //strtolower(substr($class, 4));
-		if(!$this->_lazyInited){
-			$this->_lazyInited = 1;
-			$this->loadC('implements');
-			$this->_Init_();
+		$http = $this->useHTTP($fun);
+		if(!$this->lazyInit){
+			if(!$http){
+				$this->lazyInit = 1;
+				$this->loadC('implements');
+				$this->_Init_();
+			}
 		}
 	}
 
@@ -414,7 +418,7 @@ class gridphp_module{
 	*/
 	function &loadC(){
 		$args = func_get_args();
-		if(!$args){ //兼容->_loadC()
+		if(!$args){
 			$trace = debug_backtrace();
 			$args = $trace[1]['args'];
 		}
@@ -428,16 +432,13 @@ class gridphp_module{
 
 		$r = ($a) ? $a : $c;
 		if(!isset($this->$r)){
-			$this->$r = &$this->parent->load($this->_modname, $c, $args);
+			$this->$r = &$this->parent->load($this->name, $c, $args);
 			//调用初始化方法
 			if(method_exists($this->$r, '_Init_') ){
 				call_user_func_array(array(&$this->$r, '_Init_'), $args);
 			}
 		}
 		return $this->$r;
-	}
-	function &_loadC(){ //别名(***准废弃***)
-		return $this->loadC();
 	}
 
 	/**
@@ -447,9 +448,6 @@ class gridphp_module{
 	*/
 	function &mod($m){
 		return $this->$m = &$this->parent->mod($m);
-	}
-	function &_mod($m){ //别名(***准废弃***)
-		return $this->mod($m);
 	}
 
 	/**
@@ -504,7 +502,7 @@ class gridphp_module{
 		//$fun = strtolower($fun); //兼容php4中debug_backtrace()获取的function名称为小写
 		$args = (!$args) ? $trace['args'] : $args;
 		//$class = get_class($this); //$trace['object'] ? get_class($trace['object']) : $trace['class'];
-		$mod = $this->_modname; //substr($class, 4); //strtolower(substr($class, 4));
+		$mod = $this->name; //substr($class, 4); //strtolower(substr($class, 4));
 
 		$conf = null;
 		if($this->getConf('HTTP_CONFIG', $fun, 'host'))
@@ -663,14 +661,14 @@ class gridphp_module{
 
 		if(!$this->_CONFIG){
 			//加载配置文件
-			$file = GRIDPHP_CONF_PATH . $this->_modname . '.conf.php';
+			$file = GRIDPHP_CONF_PATH . $this->name . '.conf.php';
 			$load = file_exists($file);
 			if($load)
 				$this->_CONFIG = include($file);
 
 			//加载不同环境配置
 			if($this->getServerEnv()){
-				$file = GRIDPHP_CONF_PATH . $this->getServerEnv() . '/' . $this->_modname . '.conf.php';
+				$file = GRIDPHP_CONF_PATH . $this->getServerEnv() . '/' . $this->name . '.conf.php';
 				$load = file_exists($file);
 				if($load){
 					$this->parent->utility->loadC('array');
@@ -694,7 +692,7 @@ class gridphp_module{
 				case '@': //动态包含配置文件
 					$file = substr($conf, 1);
 					$file = preg_replace('/[^\w]/', '', $file);
-					$file = GRIDPHP_CONFINC_PATH . $this->_modname . '/' . $file . '.conf.php';
+					$file = GRIDPHP_CONFINC_PATH . $this->name . '/' . $file . '.conf.php';
 					$load = file_exists($file);
 					if($load) $conf = include($file);
 
@@ -741,7 +739,7 @@ class gridphp_module{
 		if($conf){
 			//用于识别cache是否该更新的计数器
 			$rekey = $this->_get_rekey_count($conf, $args);
-			$key_sign = $this->_modname . '|' . $func . '|' . $rekey;
+			$key_sign = $this->name . '|' . $func . '|' . $rekey;
 			foreach($args as $v){
 				if(is_numeric($v)) $v = (string) $v;
 				$key_sign .= '|' . var_export($v, 1);
@@ -768,7 +766,7 @@ class gridphp_module{
 				}
 			}
 			$ms = $this->utility->getTimerDiff('getcache');
-			$this->debug->dump("Call: {$this->_modname}->{$func} KeySign: {$key_sign} Get Cache({$ms}ms): key => {$key}\n value => " . var_export($rt, 1), 88);
+			$this->debug->dump("Call: {$this->name}->{$func} KeySign: {$key_sign} Get Cache({$ms}ms): key => {$key}\n value => " . var_export($rt, 1), 88);
 		}
 		return $rt;
 	}
@@ -791,18 +789,18 @@ class gridphp_module{
 			}
 
 			//保存当前Cache
-			$key_sign = $this->_modname . '|' . $func . '|' . $rekey . $argstr;
+			$key_sign = $this->name . '|' . $func . '|' . $rekey . $argstr;
 			$key = GRIDPHP_FUNCALL_CACHE . md5($key_sign);
 			$rt = $memc->set($key, $data, $conf['timer']);
 
 			//删除之前的Cache
 			for($i = $rekey - 1; $i >= 0 && ($rekey - $i) <= 20; $i --){
-				$key_sign_previous = $this->_modname . '|' . $func . '|' . $i . $argstr;
+				$key_sign_previous = $this->name . '|' . $func . '|' . $i . $argstr;
 				$key = GRIDPHP_FUNCALL_CACHE . md5($key_sign_previous);
 				$rt = $memc->delete($key);
 			}
 
-			$this->debug->dump("Call: {$this->_modname}->{$func} Rekey: {$rekey} KeySign: {$key_sign} Set Cache: key => {$key} timer: {$conf['timer']}\nvalue => " . var_export($data, 1), 88);
+			$this->debug->dump("Call: {$this->name}->{$func} Rekey: {$rekey} KeySign: {$key_sign} Set Cache: key => {$key} timer: {$conf['timer']}\nvalue => " . var_export($data, 1), 88);
 		}
 		return $rt;
 	}
@@ -816,7 +814,7 @@ class gridphp_module{
 		if($conf){
 			//用于识别cache是否该更新的计数器
 			$rekey = $this->_get_rekey_count($conf, $args);
-			$key_sign = $this->_modname . '|' . $func . '|' . $rekey;
+			$key_sign = $this->name . '|' . $func . '|' . $rekey;
 			foreach($args as $v){
 				if(is_numeric($v)) $v = (string) $v;
 				$key_sign .= '|' . var_export($v, 1);
@@ -836,7 +834,7 @@ class gridphp_module{
 		$rt = null;
 		$conf = $this->_get_cache_conf($func);
 		if($conf){
-			$key_sign = $this->_modname . '|' . $conf['func'];
+			$key_sign = $this->name . '|' . $conf['func'];
 			foreach($conf['rekey'] as $i => $v){
 				if(is_numeric($args[$v])) $args[$v] = (string) $args[$v];
 				$key_sign .= '|' . var_export($args[$v], 1);
@@ -844,7 +842,7 @@ class gridphp_module{
 			$key = GRIDPHP_REKEY_CACHE . md5($key_sign);
 			$memc = $this->memcd->loadMemc($conf['cache']);
 			$rt = $memc->increment($key, 1, $conf['timer']);
-			$this->debug->dump("Call: {$this->_modname}->{$func} KeySign: {$key_sign} ReCache: key => {$key}\n value => {$rt}", 88);
+			$this->debug->dump("Call: {$this->name}->{$func} KeySign: {$key_sign} ReCache: key => {$key}\n value => {$rt}", 88);
 			//延迟更新队列
 			if(GRIDPHP_REKEY_DELAY_DEF > 0){
 				$delay = time() + ($conf['delay'] ? $conf['delay'] : GRIDPHP_REKEY_DELAY_DEF);
@@ -882,7 +880,7 @@ class gridphp_module{
 	* 返回cache是否该更新的计数器
 	*/
 	function _get_rekey_count($conf, $args){
-		$key_sign = $this->_modname . '|' . $conf['func'];
+		$key_sign = $this->name . '|' . $conf['func'];
 		foreach($conf['rekey'] as $i => $v){
 			if(is_numeric($v)){
 				if(is_numeric($args[$v]))
@@ -897,7 +895,7 @@ class gridphp_module{
 		$key = GRIDPHP_REKEY_CACHE . md5($key_sign);
 		$memc = $this->memcd->loadMemc($conf['cache']);
 		$count = intval($memc->get($key));
-		$this->debug->dump("Call: {$this->_modname}->{$conf['func']} KeySign: {$key_sign} rekey => {$key} value => {$count}", 88);
+		$this->debug->dump("Call: {$this->name}->{$conf['func']} KeySign: {$key_sign} rekey => {$key} value => {$count}", 88);
 		return $count;
 	}
 
@@ -906,7 +904,7 @@ class gridphp_module{
 		$trace = debug_backtrace();
 		$trace = $trace[1];
 		//$class = get_class($this); //$trace['object'] ? get_class($trace['object']) : $trace['class'];
-		$mod = $this->_modname; //substr($class, 4); //strtolower(substr($class, 4));
+		$mod = $this->name; //substr($class, 4); //strtolower(substr($class, 4));
 		$func = $trace['function'];
 		//复制传参而不是引用！ 
 		$args = array(); foreach($trace['args'] as $i => $v) $args[] = $v;
@@ -1001,7 +999,7 @@ class gridphp_module{
 	* AJAX调用方法
 	*/
 	function AJAX($args){
-		$mod = $this->_modname;
+		$mod = $this->name;
 		$func = $args['func'];
 		$this->utility->setTimerPoint('ajax');
 
@@ -1009,7 +1007,7 @@ class gridphp_module{
 			require_once($ajax);
 			$ajax = $mod . '_ajax';
 			$ajax = new $ajax();
-			$ajax->_modname = $mod;
+			$ajax->name = $mod;
 			$ajax->parent = &$this->parent;
 			//attach default mods
 			foreach($this->parent->defmods as $dm)
@@ -1061,7 +1059,7 @@ class gridphp_module{
 		$trace = debug_backtrace();
 		$trace = $trace[0];
 		// $class = get_class($this); //$trace['object'] ? get_class($trace['object']) : $trace['class'];
-		$mod = $this->_modname; //substr($class, 4); //strtolower(substr($class, 4));
+		$mod = $this->name; //substr($class, 4); //strtolower(substr($class, 4));
 		$dbg = GRIDPHP_DBG_PATH . $mod . '.dbg.php';
 		if(file_exists($dbg))
 			include(GRIDPHP_DBG_PATH . $mod . '.dbg.php');

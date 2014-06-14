@@ -7,7 +7,7 @@ class gridphp_debug extends gridphp_module{
 
 	var $debug = 0, $count = 0, $level = 0;
 
-	function _Construct_Init_(){
+	function _Init_(){
 		$this->debug = (
 			//只在本地和测试机上生效
 			in_array($this->getServerEnv(), array('', 'server', 'local', 'dev', 'sae'))
