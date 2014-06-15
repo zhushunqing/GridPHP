@@ -21,9 +21,19 @@ return array(
 			// 'host'	=> '127.0.0.1',
 			// 'name'	=> 'api.gridphp.com',
 			// 'port'	=> 80,
-			// 'uri'	=> '/gridphp_http_proxy.php',
+			// 'uri'	=> '/gridphp_common_server.php',
 			// 'timeout'=> 3000,	//超时毫秒设置
 			'use'	=> 1,
+		),
+
+	),
+
+	'AJAX_CONFIG' => array(
+
+		//允许未登录请求的方法
+		'anonymous'	=> array(
+			'hello1' => 1,
+			'hello2' => 1,
 		),
 
 	),

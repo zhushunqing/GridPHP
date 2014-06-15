@@ -1047,8 +1047,8 @@ class gridphp_module{
 		}else{
 			$time = '10s+';
 		}
-		$memc = $this->memcd->loadMemc('callfuncount');
-		$memc->listPush('ajax_request_time', $method . '[' . $time . ']', 1, GRIDPHP_TODAY_TIMER);
+		// $memc = $this->memcd->loadMemc('callfuncount');
+		// $memc->listPush('ajax_request_time', $method . '[' . $time . ']', 1, GRIDPHP_TODAY_TIMER);
 
 		return $ret;
 	}
