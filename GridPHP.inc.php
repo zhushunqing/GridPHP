@@ -13,8 +13,7 @@ class GRIDPHP{
 		$_REQSRC = null, 
 		$_SERVIP = null, 
 		$_HTTP_TASKS = array(),
-		$_MOD_INITED = array(),
-		$_CLASS_INITED = array();
+		$_MOD_INITED = array();
 
 	/**
 	* GRIDPHP 构造函数
