@@ -126,37 +126,6 @@ class gridphp_log extends gridphp_module{
 	}
 	
 	/**
-	* 直接操作checkpoint表
-	* @param string $class 类别
-	* @param string $tag 标签
-	* @param int $count 数据
-	* @param string 日期
-	* @param string 类型 天 or 48点
-	* @return bool
-	*/
-	public function insPointdata2DB($class, $tag, $count, $date='', $type= 'day') {
-		if($class && $tag) {
-			$key = $class . '-' . $tag;
-			$key = 'gridphp_checkpoint_' . md5($key);
-			$mdb_admin = $this->dba->loadDB('mdb_admin');
-			$mdb_admin->selectdb('zhenxin_stat');
-			if(!in_array($type, array('day','30min'))) {
-				$type = 'day';
-			}
-			if($type == 'day') {
-				$date = $date ? $date: date('Y-m-d');
-			} else {
-				$date = $date ? $date: date('Y-m-d-H:i');
-			}
-			$create_date = date('Y-m-d H:i:s');
-			$data =  array('code'=> $key,'d_time'=> $date,'number'=> $count,'create_date'=> $create_date,'type'=> $type);
-			$result = $mdb_admin->insert('notice_report', $data);
-			return $result;
-		}
-		return false;
-	}
-	
-	/**
 	* 直接设置统计标签数值
 	* @param string $class 类别
 	* @param string $tag 标签
