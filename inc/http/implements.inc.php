@@ -124,7 +124,7 @@ class http_implements extends gridphp_implements{
 	* @param int $timeout 超时ms
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 其它同http 404 200等)
 	*/
-	function &headUrl($url, $timeout = GRIDPHP_HTTP_DEFAULT_TIMEOUT){
+	function &headUrl($url, $timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){
 		$server = $this->func->_parse_url($url);
 		return $this->head($server['host'], $server['port'], $server['query'], $timeout);
 	}
@@ -140,7 +140,7 @@ class http_implements extends gridphp_implements{
 	function &head($host, $port, $request, $timeout){
 
 		//不支持socket方法
-		if(!function_exists('socket_create')) return array('status' => GRIDPHP_HTTP_ERR_NO_SOCKET);
+		if(!function_exists('socket_create')) return array('status' => GRIDPHP_RPC_ERR_NO_SOCKET);
 
 		$this->setHeader('Host', $this->getHeader('Host') ? $this->getHeader('Host') : $host);
 		$this->setHeader('Connection', 'Close');
@@ -148,7 +148,7 @@ class http_implements extends gridphp_implements{
 		$header = $this->func->_buildHeader($this->_headers);
 		$data = 'HEAD ' . $request . " HTTP/1.0\r\n" . $header . "\r\n\r\n";
 		$rs = &$this->_requestData($host, $port, $data);
-		if($timeout !== GRIDPHP_HTTP_NONBLOCK) $this->sendRequest($timeout);
+		if($timeout !== GRIDPHP_RPC_NONBLOCK) $this->sendRequest($timeout);
 		return $rs;
 	}
 
@@ -158,7 +158,7 @@ class http_implements extends gridphp_implements{
 	* @param int $timeout 超时ms
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 其它同http 404 200等)
 	*/
-	function &getUrl($url, $timeout = GRIDPHP_HTTP_DEFAULT_TIMEOUT){
+	function &getUrl($url, $timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){
 		$server = $this->func->_parse_url($url);
 		return $this->get($server['host'], $server['port'], $server['query'], $timeout);
 	}
@@ -170,7 +170,7 @@ class http_implements extends gridphp_implements{
 	* @return string
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 其它同http 404 200等)
 	*/
-	function &postUrl($url, $form = '', $timeout = GRIDPHP_HTTP_DEFAULT_TIMEOUT){
+	function &postUrl($url, $form = '', $timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){
 		$server = $this->func->_parse_url($url);
 		return $this->post($server['host'], $server['port'], $server['query'], $form, $timeout);
 	}
@@ -186,7 +186,7 @@ class http_implements extends gridphp_implements{
 	function &get($host, $port, $request, $timeout){
 
 		//不支持socket方法
-		if(!function_exists('socket_create')) return array('status' => GRIDPHP_HTTP_ERR_NO_SOCKET);
+		if(!function_exists('socket_create')) return array('status' => GRIDPHP_RPC_ERR_NO_SOCKET);
 
 		$this->setHeader('Host', $this->getHeader('Host') ? $this->getHeader('Host') : $host);
 		$this->setHeader('Connection', 'Close');
@@ -200,7 +200,7 @@ class http_implements extends gridphp_implements{
 		}
 		$data = 'GET ' . $request . " HTTP/1.1\r\n" . $header . "\r\n\r\n";
 		$rs = &$this->_requestData($host, $port, $data);
-		if($timeout !== GRIDPHP_HTTP_NONBLOCK) $this->sendRequest($timeout);
+		if($timeout !== GRIDPHP_RPC_NONBLOCK) $this->sendRequest($timeout);
 		return $rs;
 	}
 
@@ -216,13 +216,13 @@ class http_implements extends gridphp_implements{
 	function &post($host, $port, $request, $form, $timeout){
 
 		//不支持socket方法
-		if(!function_exists('socket_create')) return array('status' => GRIDPHP_HTTP_ERR_NO_SOCKET);
+		if(!function_exists('socket_create')) return array('status' => GRIDPHP_RPC_ERR_NO_SOCKET);
 
 		$data = '';
 		if(count($this->_files) > 0){
 			//文件上传post
 
-			$boundary = '-----GRIDPHP_HTTP-' . md5(uniqid('GRIDPHP_HTTP') . microtime());
+			$boundary = '-----GRIDPHP_RPC-' . md5(uniqid('GRIDPHP_RPC') . microtime());
 			$this->setHeader('Content-Type', 'multipart/form-data; boundary=' . $boundary);
 
 			//表单数据
@@ -253,7 +253,7 @@ class http_implements extends gridphp_implements{
 		$data = 'POST ' . $request . " HTTP/1.1\r\n" . $header . "\r\n" . $data;
 
 		$rs = &$this->_requestData($host, $port, $data);
-		if($timeout !== GRIDPHP_HTTP_NONBLOCK) $this->sendRequest($timeout);
+		if($timeout !== GRIDPHP_RPC_NONBLOCK) $this->sendRequest($timeout);
 		return $rs;
 	}
 
@@ -269,10 +269,10 @@ class http_implements extends gridphp_implements{
 	function &sockget($host, $port, $data, $timeout, $endmark = "\n"){
 
 		//不支持socket方法
-		if(!function_exists('socket_create')) return array('status' => GRIDPHP_HTTP_ERR_NO_SOCKET);
+		if(!function_exists('socket_create')) return array('status' => GRIDPHP_RPC_ERR_NO_SOCKET);
 
 		$rs = &$this->_requestData($host, $port, $data, $endmark);
-		if($timeout !== GRIDPHP_HTTP_NONBLOCK) $this->sendRequest($timeout);
+		if($timeout !== GRIDPHP_RPC_NONBLOCK) $this->sendRequest($timeout);
 		return $rs;
 	}
 
@@ -292,7 +292,7 @@ class http_implements extends gridphp_implements{
 	* 等待接收数据
 	* @param int $timeout 超时ms
 	*/
-	function sendRequest($timeout = GRIDPHP_HTTP_DEFAULT_TIMEOUT){
+	function sendRequest($timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){
 
 		//不支持socket方法
 		if(!function_exists('socket_create')) return false;
@@ -309,14 +309,14 @@ class http_implements extends gridphp_implements{
 			//是否启动多进程并发
 			$this->_sockets[$i]['thread'] = 0;
 			if(
-				GRIDPHP_HTTP_THREAD_MODE == 1
+				GRIDPHP_RPC_THREAD_MODE == 1
 				&& count($this->_sockets) > 1
-				&& strlen($data) > GRIDPHP_HTTP_THREAD_LENGTH
+				&& strlen($data) > GRIDPHP_RPC_THREAD_LENGTH
 			){
 				$this->_sockets[$i]['thread'] = 1;
 
 			}else if(
-				GRIDPHP_HTTP_THREAD_MODE == 2
+				GRIDPHP_RPC_THREAD_MODE == 2
 				&& count($this->_sockets) > 1
 			){
 				$this->_sockets[$i]['thread'] = 1;
@@ -414,9 +414,9 @@ class http_implements extends gridphp_implements{
 			for($i = 0; $i < count($this->_sockets); $i ++){
 				if(is_resource($this->_sockets[$i]['socket'])){
 					$sockid = (int) $this->_sockets[$i]['socket'];
-					if(!$write_flag[$i])
+					if(!@$write_flag[$i])
 						$write[] = $this->_sockets[$i]['socket'];					
-					if(!$read_flag[$i])
+					if(!@$read_flag[$i])
 						$read[] = $this->_sockets[$i]['socket'];
 				}else{
 					$write_flag[$i] = $read_flag[$i] = 1;
@@ -433,13 +433,13 @@ class http_implements extends gridphp_implements{
 					$sockid = $resid[(int) $socket];
 					$data = $this->_sockets[$sockid]['data'];
 
-					$buff = substr($data, $pos[$sockid], GRIDPHP_HTTP_WRITE_DATA_LEN);
+					$buff = substr($data, $pos[$sockid], GRIDPHP_RPC_WRITE_DATA_LEN);
 					$len = strlen($buff);
 					$p = @socket_write($socket, $buff, $len);
 					$pos[$sockid] += $p;
 
 					if($p === false){
-						//$this->_sockets[$sockid]['socket'] = array("error" => GRIDPHP_HTTP_ERR_BAD_SERVICE, 'errinfo' => 'ERR_BAD_SERVICE');
+						//$this->_sockets[$sockid]['socket'] = array("error" => GRIDPHP_RPC_ERR_BAD_SERVICE, 'errinfo' => 'ERR_BAD_SERVICE');
 					//write done
 					}else if($pos[$sockid] >= strlen($data)){
 						$write_flag[$sockid] = 1;
@@ -455,7 +455,7 @@ class http_implements extends gridphp_implements{
 					if(!is_resource($this->_sockets[$sockid]['socket']))
 						continue;
 					
-					$buff = @socket_read($socket, GRIDPHP_HTTP_READ_BUFF_LEN);
+					$buff = @socket_read($socket, GRIDPHP_RPC_READ_BUFF_LEN);
 					if($buff)
 						$this->_buffers[$sockid] .= $buff;
 					
@@ -482,14 +482,14 @@ class http_implements extends gridphp_implements{
 		for($i = 0; $i < count($this->_sockets); $i ++){
 
 			if(!$read_flag[$i]){
-				$this->_response[$i]['status'] = GRIDPHP_HTTP_ERR_READ_TIMEOUT;
+				$this->_response[$i]['status'] = GRIDPHP_RPC_ERR_READ_TIMEOUT;
 				$this->_response[$i]['error'] = 'ERR_READ_TIMEOUT';
 				$this->_response[$i]['writetimer'] = $this->_sockets[$i]['writetimer'];
 				$this->_response[$i]['readtimer'] = $timeout - $this->_sockets[$i]['writetimer'];
 			}
 
 			if(!$write_flag[$i]){
-				$this->_response[$i]['status'] = GRIDPHP_HTTP_ERR_WRITE_TIMEOUT;
+				$this->_response[$i]['status'] = GRIDPHP_RPC_ERR_WRITE_TIMEOUT;
 				$this->_response[$i]['error'] = 'ERR_WRITE_TIMEOUT';
 				$this->_response[$i]['writetimer'] = $timeout;
 			}
@@ -531,7 +531,7 @@ class http_implements extends gridphp_implements{
 			}
 
 			//非标准HTTP协议
-			if($this->_response[$i]['status'] == GRIDPHP_HTTP_ERR_BAD_REQUEST && !empty($this->_sockets[$i]['mark'])){
+			if($this->_response[$i]['status'] == GRIDPHP_RPC_ERR_BAD_REQUEST && !empty($this->_sockets[$i]['mark'])){
 				$this->_response[$i]['status'] = 100;
 			}
 

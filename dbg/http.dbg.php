@@ -24,18 +24,18 @@
 		case 1:	
 			print "并发get请求\n";
 
-			$rs[] = &$h->getUrl('http://zhushunqing.sinaapp.com/sleep.php?s=1', GRIDPHP_HTTP_NONBLOCK);
-			$rs[] = &$h->getUrl('http://zhushunqing.sinaapp.com/sleep.php?s=2&a=1&b=2', GRIDPHP_HTTP_NONBLOCK);
-			$rs[] = &$h->getUrl('http://zhushunqing.sinaapp.com/sleep.php?s=3&ccc', GRIDPHP_HTTP_NONBLOCK);
+			$rs[] = &$h->getUrl('http://zhushunqing.sinaapp.com/sleep.php?s=1', GRIDPHP_RPC_NONBLOCK);
+			$rs[] = &$h->getUrl('http://zhushunqing.sinaapp.com/sleep.php?s=2&a=1&b=2', GRIDPHP_RPC_NONBLOCK);
+			$rs[] = &$h->getUrl('http://zhushunqing.sinaapp.com/sleep.php?s=3&ccc', GRIDPHP_RPC_NONBLOCK);
 			$h->sendRequest(3000); //全局超时
 
 		break;
 		case 2: 
 			print "并发post请求\n";
 
-			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php?s=1', 'aaa=1&bbb=2&ccc=3', GRIDPHP_HTTP_NONBLOCK);
-			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php?s=3', 'aaa=1&bbb=2&ccc=3', GRIDPHP_HTTP_NONBLOCK);
-			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php?s=4', 'aaa=1&bbb=2&ccc=3', GRIDPHP_HTTP_NONBLOCK);
+			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php?s=1', 'aaa=1&bbb=2&ccc=3', GRIDPHP_RPC_NONBLOCK);
+			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php?s=3', 'aaa=1&bbb=2&ccc=3', GRIDPHP_RPC_NONBLOCK);
+			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php?s=4', 'aaa=1&bbb=2&ccc=3', GRIDPHP_RPC_NONBLOCK);
 			$h->sendRequest(5000);
 
 		break;
@@ -61,20 +61,20 @@
 
 			$h->addFile('upload1', './tmp/screenshot1.png'); //支持多文件
 			//$h->addFile('upload2', './tmp/screenshot2.png'); 
-			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php', 'aaa=1&bbb=2&ccc=3', GRIDPHP_HTTP_NONBLOCK);
+			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php', 'aaa=1&bbb=2&ccc=3', GRIDPHP_RPC_NONBLOCK);
 
 			$h->addFile('upload2', './tmp/screenshot2.png'); //支持多文件
 			//$h->addFile('upload2', './tmp/screenshot3.png'); 
-			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php', 'aaa=1&bbb=2&ccc=3', GRIDPHP_HTTP_NONBLOCK);
+			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php', 'aaa=1&bbb=2&ccc=3', GRIDPHP_RPC_NONBLOCK);
 
 			$h->addFile('upload3', './tmp/screenshot3.png');
 			//$h->addFile('upload4', './tmp/screenshot4.png');
 			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php', 
 					array('ddd' => 4, 'eee' => 5, 'fff' => 6), //post数据支持数组和query串
-					GRIDPHP_HTTP_NONBLOCK);
+					GRIDPHP_RPC_NONBLOCK);
 
 			$h->addFile('upload4', './tmp/screenshot4.png'); 
-			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php', 'aaa=1&bbb=2&ccc=3', GRIDPHP_HTTP_NONBLOCK);
+			$rs[] = &$h->postUrl('http://zhushunqing.sinaapp.com/sleep.php', 'aaa=1&bbb=2&ccc=3', GRIDPHP_RPC_NONBLOCK);
 			$h->sendRequest(30000);
 
 		break;

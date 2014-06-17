@@ -5,7 +5,7 @@
 return array(
 
 	//远程调用接口
-	'HTTP_CONFIG' => array(
+	'RPC_CONFIG' => array(
 		
 		//默认接口
 		'default' => array(
@@ -17,6 +17,7 @@ return array(
 			//'encode'	=> 'serialize', //使用serialize编码数据
 		),
 
+		//可以单独配置远程接口
 		'hello2' => array(
 			// 'host'	=> '127.0.0.1',
 			// 'name'	=> 'api.gridphp.com',

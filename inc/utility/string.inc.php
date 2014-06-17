@@ -93,6 +93,50 @@ class utility_string{
 		return $str;
 	}
 
+	//解析url数据串不decode
+	function parse_str_undecode($str){
+		$ary = explode('&', $str);
+		$rs = array();
+		foreach ($ary as $i => $value) {
+			list($k, $v) = explode('=', $value);
+			$rs[$k] = $v;
+		}
+		return $rs;
+	}
+
+	//是否gbk
+	function is_gbk($str) {
+		return ($this->detect_encoding($str) == 'GBK');
+	}
+
+	//是否utf8
+	function is_utf8($str) {
+		return ($this->detect_encoding($str) == 'UTF-8');
+	}
+
+	//检测编码
+	function detect_encoding($str) {
+		foreach (array('UTF-8', 'GBK') as $v) {
+			if ($str === iconv($v, $v . '//IGNORE', $str)) {
+				return $v;
+			}
+		}
+	}
+
+	//utf8转gbk
+	function gbktoutf8($str){
+		if($this->is_gbk($str))
+			$str = iconv("GBK", "UTF-8//IGNORE", $str);
+		return $str;
+	}
+
+	//utf8转gbk
+	function utf8togbk($str){
+		if($this->is_utf8($str))
+			$str = iconv("UTF-8", "GBK//IGNORE", $str);
+		return $str;
+	}
+
 }
 
 ?>

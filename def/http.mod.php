@@ -61,7 +61,7 @@ class gridphp_http extends gridphp_module{
 	* @param int $timeout 超时ms
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 其它同http 404 200等)
 	*/
-	public function &headUrl($url, $timeout = GRIDPHP_HTTP_DEFAULT_TIMEOUT){
+	public function &headUrl($url, $timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){
 		$this->_lazyInit();
 		return $this->implements->headUrl($url, $timeout);
 	}
@@ -85,7 +85,7 @@ class gridphp_http extends gridphp_module{
 	* @param int $timeout 超时ms
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 其它同http 404 200等)
 	*/
-	public function &getUrl($url, $timeout = GRIDPHP_HTTP_DEFAULT_TIMEOUT){
+	public function &getUrl($url, $timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){
 		$this->_lazyInit();
 		return $this->implements->getUrl($url, $timeout);
 	}
@@ -97,7 +97,7 @@ class gridphp_http extends gridphp_module{
 	* @return string
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 其它同http 404 200等)
 	*/
-	public function &postUrl($url, $form = '', $timeout = GRIDPHP_HTTP_DEFAULT_TIMEOUT){
+	public function &postUrl($url, $form = '', $timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){
 		$this->_lazyInit();
 		return $this->implements->postUrl($url, $form, $timeout);
 	}
@@ -142,7 +142,7 @@ class gridphp_http extends gridphp_module{
 	* 等待接收数据
 	* @param int $timeout 超时ms
 	*/
-	public function &sendRequest($timeout = GRIDPHP_HTTP_DEFAULT_TIMEOUT){ return $this->_callImplements(); }
+	public function &sendRequest($timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){ return $this->_callImplements(); }
 
 }
 

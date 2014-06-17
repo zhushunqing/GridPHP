@@ -12,7 +12,7 @@ class GRIDPHP{
 		$_SERVENV = null, 
 		$_REQSRC = null, 
 		$_SERVIP = null, 
-		$_HTTP_TASKS = array(),
+		$_RPC_TASKS = array(),
 		$_MOD_INITED = array();
 
 	/**
@@ -107,63 +107,66 @@ class GRIDPHP{
 	/**
 	* 添加HTTP任务队列
 	*/
-	function addHTTP($conf, $data, &$result){
-		$this->_HTTP_TASKS[] = array(
+	function addRPC($conf, $data, &$result){
+		$this->_RPC_TASKS[] = array(
 			'conf'	=> $conf,
 			'data'	=> $data,
 			'result' => &$result
 		);
-		return count($this->_HTTP_TASKS);
+		return count($this->_RPC_TASKS);
 	}
 
 	/**
 	* 合并请求接口
 	*/
-	function getHTTP(){
-		if(!$this->_HTTP_TASKS)
+	function callRPC(){
+		if(!$this->_RPC_TASKS)
 			return;
 
-		//$this->utility->setTimerPoint('_http_merge');
-		$this->_http_merge();
-		//$this->debug->dump('_http_merge : ' . $this->utility->getTimerDiff('_http_merge') . 'ms', 101);
+		//$this->utility->setTimerPoint('_rpc_merge');
+		$this->_rpc_merge();
+		//$this->debug->dump('_rpc_merge : ' . $this->utility->getTimerDiff('_rpc_merge') . 'ms', 101);
 
-		$this->utility->setTimerPoint('_http_getdata');
-		$rs = $this->_http_getdata();
-		$this->debug->dump('_http_getdata : ' . $this->utility->getTimerDiff('_http_getdata') . 'ms', 101);
+		$this->utility->setTimerPoint('_rpc_getdata');
+		$rs = $this->_rpc_getdata();
+		$this->debug->dump('_rpc_getdata : ' . $this->utility->getTimerDiff('_rpc_getdata') . 'ms', 101);
 
-		//$this->utility->setTimerPoint('_http_process');
-		$this->_http_process($rs);
-		//$this->debug->dump('_http_process : ' . $this->utility->getTimerDiff('_http_process') . 'ms', 101);
+		//$this->utility->setTimerPoint('_rpc_process');
+		$this->_rpc_process($rs);
+		//$this->debug->dump('_rpc_process : ' . $this->utility->getTimerDiff('_rpc_process') . 'ms', 101);
 
 		//END
-		$this->_HTTP_TASKS = array();
+		$this->_RPC_TASKS = array();
 	}
 
 	//合并请求数据
-	function _http_merge(){
-		$http_merge = array();
-		foreach($this->_HTTP_TASKS as $i => $t){
+	function _rpc_merge(){
+		$rpc_merge = array();
+		foreach($this->_RPC_TASKS as $i => $t){
 			$conf = $t['conf'];
-			$key = md5($conf['host'] . $conf['name'] . $conf['port'] . $conf['uri'] . $conf['encode']);
+			if(GRIDPHP_RPC_MERGE_MODE)
+				$key = md5($conf['host'] . $conf['name'] . $conf['port'] . $conf['uri'] . $conf['encode']);
+			else
+				$key = $i;
 
 			$maxt = 0;
-			if(isset($http_merge[$key]))
-				$maxt = $http_merge[$key]['conf']['timeout'];
+			if(isset($rpc_merge[$key]))
+				$maxt = $rpc_merge[$key]['conf']['timeout'];
 			$conf['timeout'] = ($maxt > $conf['timeout']) ? $maxt : $conf['timeout'];
 
-			$http_merge[$key]['conf'] = $conf;
-			$http_merge[$key]['data'][] = $t['data'];
-			$http_merge[$key]['result'][] = &$this->_HTTP_TASKS[$i]['result'];
+			$rpc_merge[$key]['conf'] = $conf;
+			$rpc_merge[$key]['data'][] = $t['data'];
+			$rpc_merge[$key]['result'][] = &$this->_RPC_TASKS[$i]['result'];
 			
 		}
-		$this->_HTTP_TASKS = &$http_merge;
+		$this->_RPC_TASKS = &$rpc_merge;
 	}
 
 	//批量取得数据
-	function _http_getdata(){
+	function _rpc_getdata(){
 		$rs = array();
 		$maxt = 0;
-		foreach($this->_HTTP_TASKS as $k => $t){
+		foreach($this->_RPC_TASKS as $k => $t){
 			$conf = $t['conf'];
 			$maxt = ($maxt > $conf['timeout']) ? $maxt : $conf['timeout'];
 
@@ -182,7 +185,7 @@ class GRIDPHP{
 			}
 
 			//有效性校验
-			$data['sign'] = $this->httpsign($data);
+			$data['sign'] = $this->rpcsign($data);
 
 			//请求来源
 			$data['src'] = $this->getRequestSRC();
@@ -209,7 +212,7 @@ class GRIDPHP{
 			}
 			$conf['uri'] .= '?module=' . $modules . '&function=' . $functions . '&timeout=' . ($maxt / 1000 + 1);
 
-			$rs[$k] = &$this->http->post($conf['host'], $conf['port'], $conf['uri'], $data, GRIDPHP_HTTP_NONBLOCK);
+			$rs[$k] = &$this->http->post($conf['host'], $conf['port'], $conf['uri'], $data, GRIDPHP_RPC_NONBLOCK);
 		}
 		$this->http->sendRequest($maxt);
 		if($maxt) $this->debug->dump($rs, 100);
@@ -217,9 +220,9 @@ class GRIDPHP{
 	}
 
 	//处理返回数据
-	function _http_process(&$rs){
+	function _rpc_process(&$rs){
 
-		foreach($this->_HTTP_TASKS as $k => $t){
+		foreach($this->_RPC_TASKS as $k => $t){
 
 			if($rs[$k]['status'] == 200){
 				$encode = $rs[$k]['headers']['DATA-ENCODEING'];
@@ -252,10 +255,10 @@ class GRIDPHP{
 						}
 
 						if(count($t['result']) > 1){
-							for($i = 0; $i < count($this->_HTTP_TASKS[$k]['result']); $i ++)
-								$this->_HTTP_TASKS[$k]['result'][$i] = $data[$i];
+							for($i = 0; $i < count($this->_RPC_TASKS[$k]['result']); $i ++)
+								$this->_RPC_TASKS[$k]['result'][$i] = $data[$i];
 						}else{
-							$this->_HTTP_TASKS[$k]['result'][0] = $data;
+							$this->_RPC_TASKS[$k]['result'][0] = $data;
 						}
 
 					//直接返回数据
@@ -267,29 +270,29 @@ class GRIDPHP{
 							//原结构返回
 							$data = $rs[$k];
 						}
-						for($i = 0; $i < count($this->_HTTP_TASKS[$k]['result']); $i ++)
-							$this->_HTTP_TASKS[$k]['result'][$i] = $data;
+						for($i = 0; $i < count($this->_RPC_TASKS[$k]['result']); $i ++)
+							$this->_RPC_TASKS[$k]['result'][$i] = $data;
 					}
 
 				}else{
 					//-1005服务端返回数据不合法
-					for($i = 0; $i < count($this->_HTTP_TASKS[$k]['result']); $i ++)
-						$this->_HTTP_TASKS[$k]['result'][$i] = array('status' => GRIDPHP_HTTP_ERR_NO_PARSEDATA);
+					for($i = 0; $i < count($this->_RPC_TASKS[$k]['result']); $i ++)
+						$this->_RPC_TASKS[$k]['result'][$i] = array('status' => GRIDPHP_RPC_ERR_NO_PARSEDATA);
 				}
 
 			}else{
 				//其它错误代码同http 403 404 500等
-				for($i = 0; $i < count($this->_HTTP_TASKS[$k]['result']); $i ++)
-					$this->_HTTP_TASKS[$k]['result'][$i] = array('status' => $rs[$k]['status']);
+				for($i = 0; $i < count($this->_RPC_TASKS[$k]['result']); $i ++)
+					$this->_RPC_TASKS[$k]['result'][$i] = array('status' => $rs[$k]['status']);
 			}
 		}
 
 	}
 
 	/**
-	* HTTP请求数据签名
+	* RPC请求数据签名
 	*/
-	function httpsign($data){
+	function rpcsign($data){
 		if(isset($data['multidata']))
 			return md5($this->_CONFIG['sign_key'] . substr($data['multidata'], 0, 512));
 		else if(isset($data['module']) && isset($data['function']))
@@ -401,9 +404,9 @@ class gridphp_module{
 		}
 		// $class = get_class($this); //$trace['object'] ? get_class($trace['object']) : $trace['class'];
 		// $mod = substr($class, 4); //strtolower(substr($class, 4));
-		$http = $this->useHTTP($fun);
+		$isrpc = $this->isRPC($fun);
 		if(!$this->lazyInit){
-			if(!$http || !GRIDPHP_HTTP_SWITCH){
+			if(!$isrpc || !GRIDPHP_RPC_SWITCH){
 				$this->lazyInit = 1;
 				$this->loadC('implements');
 				$this->_Init_();
@@ -451,22 +454,22 @@ class gridphp_module{
 	}
 
 	/**
-	* 设置使用HTTP方式远程调用
+	* 设置使用RPC远程调用
 	* @param string $fun 函数数
 	* @param int $flag 1启用 0禁用
 	* @param int $timeout HTTP接口超时设置
 	* @return int 1成功 0失败
 	*/
-	function setHTTP($fun, $flag, $timeout = null){
+	function setRPC($fun, $flag, $timeout = null){
 		//$fun = strtolower($fun); //兼容php4中debug_backtrace()获取的function名称为小写
 		if(
-			$this->getConf('HTTP_CONFIG', $fun)
+			$this->getConf('RPC_CONFIG', $fun)
 		||
-			$this->getConf('HTTP_CONFIG', 'default')
+			$this->getConf('RPC_CONFIG', 'default')
 		){
-			$this->_CONFIG['HTTP_CONFIG'][$fun]['use'] = $flag;
+			$this->_CONFIG['RPC_CONFIG'][$fun]['use'] = $flag;
 			if($timeout)
-				$this->_CONFIG['HTTP_CONFIG'][$fun]['timeout'] = $timeout;
+				$this->_CONFIG['RPC_CONFIG'][$fun]['timeout'] = $timeout;
 			return 1;
 		}else{
 			return 0;
@@ -474,25 +477,25 @@ class gridphp_module{
 	}
 
 	/**
-	* 返回是否使用HTTP方式
+	* 返回是否使用RPC
 	*/
-	function useHTTP($fun = null){
+	function isRPC($fun = null){
 		if(!$fun){
 			$trace = debug_backtrace();
 			$trace = $trace[1];
 			$fun = $trace['function'];
 		}
 		//$fun = strtolower($fun); //兼容php4中debug_backtrace()获取的function名称为小写
-		$rs = $this->getConf('HTTP_CONFIG', $fun, 'use');
+		$rs = $this->getConf('RPC_CONFIG', $fun, 'use');
 		if(is_null($rs))
-			$rs = $this->getConf('HTTP_CONFIG', 'default', 'use');
+			$rs = $this->getConf('RPC_CONFIG', 'default', 'use');
 		return $rs;
 	}
 
 	/**
-	* 使用HTTP方式调用接口
+	* 使用RPC调用接口
 	*/
-	function &callHTTP($fun = null, $args = null){
+	function &doRPC($fun = null, $args = null){
 
 		$this->utility->loadC('json');
 
@@ -505,12 +508,12 @@ class gridphp_module{
 		$mod = $this->name; //substr($class, 4); //strtolower(substr($class, 4));
 
 		$conf = null;
-		if($this->getConf('HTTP_CONFIG', $fun, 'host'))
-			$conf = $this->getConf('HTTP_CONFIG', $fun);
+		if($this->getConf('RPC_CONFIG', $fun, 'host'))
+			$conf = $this->getConf('RPC_CONFIG', $fun);
 		else{
-			$conf = $this->getConf('HTTP_CONFIG', 'default');
-			if($this->getConf('HTTP_CONFIG', $fun, 'timeout'))
-				$conf['timeout'] = $this->getConf('HTTP_CONFIG',$fun, 'timeout');
+			$conf = $this->getConf('RPC_CONFIG', 'default');
+			if($this->getConf('RPC_CONFIG', $fun, 'timeout'))
+				$conf['timeout'] = $this->getConf('RPC_CONFIG',$fun, 'timeout');
 		}
 		$conf['encode'] = isset($conf['encode']) ? $conf['encode'] : 'json';
 
@@ -527,99 +530,39 @@ class gridphp_module{
 			$data['types'] = $this->utility->json->encode($data['types']);
 		}
 
-		//合并请求接口
-		if($this->useHTTP($fun) == 2){
-			//-1004返回表示接口未请求完成
-			$result = array('status' => GRIDPHP_HTTP_ERR_NO_CONNECT);
-			$this->addHTTP($conf, $data, $result);
-			return $result;
+		switch($this->isRPC($fun)){
+			//合并请求接口
+			case 2:
+				//-1004返回表示接口未请求完成
+				$result = array('status' => GRIDPHP_RPC_ERR_NO_CONNECT);
+				$this->addRPC($conf, $data, $result);
+				return $result;
+			break;
 
-		//已在队列里的请求一起发送
-		}else if($this->useHTTP($fun) == 3){
-			$result = array('status' => GRIDPHP_HTTP_ERR_NO_CONNECT);
-			$this->addHTTP($conf, $data, $result);
-			$this->getHTTP();
-			return $result;
+			case 1: //实时请求
+			case 3: //已在队列里的请求一起发送
+			default:
+				$result = array('status' => GRIDPHP_RPC_ERR_NO_CONNECT);
+				$this->addRPC($conf, $data, $result);
+				$this->callRPC();
+				return $result;
+			break;
 		}
 
-		//有效性校验
-		$data['sign'] = $this->parent->httpsign($data);
-
-		//请求来源
-		$data['src'] = $this->getRequestSRC();
-
-		//设置headers
-		if($conf['name'])
-			$this->http->setHeader('Host', $conf['name']);
-
-		if(isset($conf['headers'])){
-			if(isset($conf['headers']['Cookie']) && $conf['headers']['Cookie'] == 1 && isset($_SERVER['HTTP_COOKIE']))
-				$conf['headers']['Cookie'] = $_SERVER['HTTP_COOKIE'];
-			foreach($conf['headers'] as $k => $v)
-				$this->http->setHeader($k, $v);
-		}
-
-		$conf['uri'] .= '?module=' . $data['module'] . '&function=' . $data['function'] . '&timeout=' . ($conf['timeout'] / 1000 + 1);
-		$rs = $this->http->post($conf['host'], $conf['port'], $conf['uri'], $data, $conf['timeout']);
-		$this->debug->dump($rs, 100);
-
-		if($rs['status'] == 200){
-			$rs['response'] = trim($rs['response']);
-
-			$encode = $rs['headers']['DATA-ENCODEING'];
-			if($encode == 'serialize'){
-				$rs = unserialize($rs['response']);
-			}else if($encode == 'json'){
-				$rs = $this->utility->json->decode($rs['response']);
-			}else{
-				$rs = $this->utility->json->decode($rs['response'], 1);
-			}
-
-			if($rs){
-				
-				$this->utility->loadC('array');
-				if(is_object($rs) && array_key_exists('types', $rs) && array_key_exists('data', $rs)){
-					$data = $rs->data;
-					//还原节点类型
-					if(is_object($rs->types)){
-						$types = (array) $rs->types;
-						$this->utility->json->recover_array($data, $types);
-					}else if($encode == 'json'){
-						$data = $this->utility->array->object2array($data);
-					}
-				}else if($encode == 'json'){
-					//转成数据结构
-					$data = $this->utility->array->object2array($rs);
-				}else{
-					//原结构返回
-					$data = $rs;
-				}
-
-			}else{
-				//-1005服务端返回数据不合法
-				$data = array('status' => GRIDPHP_HTTP_ERR_NO_PARSEDATA);
-			}
-
-		}else{
-			//其它错误代码同http 403 404 500等
-			$data = array('status' => $rs['status']);
-		}
-
-		return $data;
 	}
 
 	/**
 	* 添加HTTP任务队列
 	*/
-	function addHTTP(&$conf, &$data, &$result){
-		return $this->parent->addHTTP($conf, $data, $result);
+	function addRPC(&$conf, &$data, &$result){
+		return $this->parent->addRPC($conf, $data, $result);
 	}
 
 	/**
-	* 合并请求接口
+	* 合并远程调用
 	*/
-	function getHTTP(){
-		return $this->parent->getHTTP();
+	function callRPC(){
+		return $this->parent->callRPC();
 	}
 
 	/**
@@ -912,7 +855,7 @@ class gridphp_module{
 
 		$object = &$this->parent->$mod;
 		$object->_lazyInit();
-		$usehttp = $object->useHTTP($func);
+		$isrpc = $object->isRPC($func);
 
 		//记录接口调用时间
 		$this->utility->setTimerPoint('callog');
@@ -924,9 +867,9 @@ class gridphp_module{
 			//直接返回本地缓存
 			return $cache;
 
-		}else if((GRIDPHP_HTTP_SWITCH && $usehttp) || $usehttp == 10){
+		}else if((GRIDPHP_RPC_SWITCH && $isrpc) || $isrpc == 10){
 			//远程调用
-			$ret = &$this->callHTTP($func, $args);
+			$ret = &$this->doRPC($func, $args);
 			$this->log->callog($mod, $func, 'h'); //记录请求日志
 			//异步请求或远程出错直接返回
 			if(is_array($ret) && $ret['status'])

@@ -4,7 +4,7 @@
 //GRIDPHP_BASE DEFIND
 define('GRIDPHP_ROOT_PATH', dirname(dirname(__FILE__)) . '/');
 define('GRIDPHP_CONF_PATH', GRIDPHP_ROOT_PATH . 'conf/');
-define('GRIDPHP_CONFINC_PATH', GRIDPHP_ROOT_PATH . 'conf/@conf/');
+define('GRIDPHP_CONFINC_PATH', GRIDPHP_ROOT_PATH . 'conf/inconf/');
 define('GRIDPHP_DEF_PATH', GRIDPHP_ROOT_PATH . 'def/');
 define('GRIDPHP_MOD_PATH', GRIDPHP_ROOT_PATH . 'mod/');
 define('GRIDPHP_INC_PATH', GRIDPHP_ROOT_PATH . 'inc/');
@@ -34,31 +34,34 @@ define('GRIDPHP_REKEY_DELAY_DEF', 0);
 define('GRIDPHP_REKEY_DELAY_TIMER', 600);
 
 //______________________________________________________________________________
-//GRIDPHP_HTTP DEFIND
+//GRIDPHP_RPC DEFIND
 
 //默认开启HTTP功能
-if(!defined('GRIDPHP_HTTP_SWITCH')) define('GRIDPHP_HTTP_SWITCH', 1);
+if(!defined('GRIDPHP_RPC_SWITCH')) define('GRIDPHP_RPC_SWITCH', 1);
 
 //常规配置
-define('GRIDPHP_HTTP_NONBLOCK', 0);				//异步开启
-define('GRIDPHP_HTTP_READ_BUFF_LEN', 4096);		//读缓存大小k
-define('GRIDPHP_HTTP_WRITE_DATA_LEN', 4096);	//写缓存大小k
-define('GRIDPHP_HTTP_DEFAULT_TIMEOUT', 10000);	//默认超时ms
+define('GRIDPHP_RPC_NONBLOCK', 0);				//异步开启
+define('GRIDPHP_RPC_READ_BUFF_LEN', 4096);		//读缓存大小k
+define('GRIDPHP_RPC_WRITE_DATA_LEN', 4096);	//写缓存大小k
+define('GRIDPHP_RPC_DEFAULT_TIMEOUT', 10000);	//默认超时ms
 
 //错误代码
-define('GRIDPHP_HTTP_ERR_READ_TIMEOUT', -1001);	//读取数据超时
-define('GRIDPHP_HTTP_ERR_WRITE_TIMEOUT', -1002);//发送数据超时
-define('GRIDPHP_HTTP_ERR_NO_SOCKET', -1003);	//不支持socket方法
-define('GRIDPHP_HTTP_ERR_NO_CONNECT', -1004);	//接口未请求完成
-define('GRIDPHP_HTTP_ERR_NO_PARSEDATA', -1005);	//返回数据未能正常解析
-define('GRIDPHP_HTTP_ERR_BAD_REQUEST', -1006);//服务器请求错误
-define('GRIDPHP_HTTP_ERR_BAD_SERVICE', -1007);//服务器请求错误
+define('GRIDPHP_RPC_ERR_READ_TIMEOUT', -1001);	//读取数据超时
+define('GRIDPHP_RPC_ERR_WRITE_TIMEOUT', -1002);//发送数据超时
+define('GRIDPHP_RPC_ERR_NO_SOCKET', -1003);	//不支持socket方法
+define('GRIDPHP_RPC_ERR_NO_CONNECT', -1004);	//接口未请求完成
+define('GRIDPHP_RPC_ERR_NO_PARSEDATA', -1005);	//返回数据未能正常解析
+define('GRIDPHP_RPC_ERR_BAD_REQUEST', -1006);//服务器请求错误
+define('GRIDPHP_RPC_ERR_BAD_SERVICE', -1007);//服务器请求错误
+
+//远程调用合并模式 0关闭 1合并相同接口源
+define('GRIDPHP_RPC_MERGE_MODE', 0);
 
 //并发进程模式 0关闭 1自动 2全部
-define('GRIDPHP_HTTP_THREAD_MODE', 0);
+define('GRIDPHP_RPC_THREAD_MODE', 0);
 
 //发送数据超过指定长度自动开启多进程
-define('GRIDPHP_HTTP_THREAD_LENGTH', 4096);
+define('GRIDPHP_RPC_THREAD_LENGTH', 4096);
 
 //______________________________________________________________________________
 //GRIDPHP_COMMON DEFIND
@@ -81,9 +84,9 @@ return array(
 	//服务器环境
 	'server_env' => array(
 		''					=> 'local',	//本地
-		// '192.168.1.100'		=> 'server',
-		'192.168.0.100'		=> 'local',	//本地
-		'192.168.1.20'		=> 'local',	//本地
+		// '192.168.1.1'		=> 'server',
+		'192.168.0.1'		=> 'local',	//本地
+		'192.168.0.2'		=> 'local',	//本地
 	),
 
 );

@@ -16,7 +16,7 @@ $timer = getMsec();
 //注册退出调用
 register_shutdown_function('shutdown_function_slowlog');
 
-define('GRIDPHP_HTTP_SWITCH', 0); //Server模式关闭HTTP方式
+define('GRIDPHP_RPC_SWITCH', 0); //Server模式关闭HTTP方式
 require_once('../GridPHP.inc.php');
 $GP = &$GLOBALS['GRIDPHP'];
 
@@ -112,7 +112,7 @@ exit(1);
 //请求数据校验
 function check_sign(){
 	global $GP, $request;
-	if($request->getPost('sign') != $GP->httpsign($_POST)){
+	if($request->getPost('sign') != $GP->rpcsign($_POST)){
 		die('Invaild request!');
 	}
 }

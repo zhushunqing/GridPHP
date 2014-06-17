@@ -58,10 +58,13 @@ class http_func {
 	function _parse_response($text){
 		$p = strpos($text, "\r\n\r\n");
 		$head = substr($text, 0, $p);		//响应头
-		$response = substr($text, $p + 4);	//正文
+		if($p)
+			$response = substr($text, $p + 4);	//正文
+		else
+			$response = $text; //非HTTP协议
 		$line = explode("\r\n", $head);
 		list(,$status,) = @explode(' ', $line[0]);	//状态码
-		if(!$status) $status = GRIDPHP_HTTP_ERR_BAD_REQUEST;
+		if(!$status) $status = GRIDPHP_RPC_ERR_BAD_REQUEST;
 
 		$headers = array();			//header信息
 		for($i = 1; $i < count($line); $i ++){

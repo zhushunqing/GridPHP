@@ -21,7 +21,8 @@ class modexample_implements extends gridphp_implements{
     * @return void
     */ 
     public function hello1($s){
-		return "1. Hello1, I am {$s}!";
+        sleep(1);
+		return "1. Hello1, I am {$s}, and I sleeped 1 sec.";
 	}
 
     /**
@@ -30,7 +31,8 @@ class modexample_implements extends gridphp_implements{
     * @return string
     */ 
     public function hello2($s){
-		return "2. Hello2, I am {$s}!";
+        sleep(2);
+		return "2. Hello2, I am {$s}, and I sleeped 2 sec.";
 	}
 
     /**
@@ -39,8 +41,9 @@ class modexample_implements extends gridphp_implements{
     * @return string
     */ 
     public function hello3(){
+        sleep(3);
 		//调用subclass方法
-		return "3. Hello3, " . $this->subclass->do_something();
+		return "3. Hello3, " . $this->subclass->do_something() . ', and I sleeped 3 sec.';
 	}
 
 }
