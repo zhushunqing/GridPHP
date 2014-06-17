@@ -13,7 +13,7 @@ return array(
 			'name'	=> 'gridphp.sinaapp.com',
 			'port'	=> 80,
 			'uri'	=> '/api/gridphp_common_server.php',
-			'timeout'=> 3000,	//超时毫秒设置
+			'timeout'=> 4000,	//超时毫秒设置
 			//'encode'	=> 'serialize', //使用serialize编码数据
 		),
 

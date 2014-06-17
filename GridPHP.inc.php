@@ -245,7 +245,7 @@ class GRIDPHP{
 
 						$data = $rs[$k]->data;
 						//还原节点类型
-						if(is_object($rs->types)){
+						if(isset($rs->types) && is_object($rs->types)){
 							$types = (array) $rs[$k]->types;
 							//$this->utility->json->recover_array(&$data, $types);
 							$this->utility->json->recover_array($data, $types);
@@ -357,7 +357,7 @@ class GRIDPHP{
 
 	//取客户端IP
 	function getClientIP(){
-		return $_SERVER['HTTP_X_FORWARDED_FOR'] ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+		return isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : @$_SERVER['REMOTE_ADDR'];
 	}
 
 	/**

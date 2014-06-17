@@ -403,6 +403,7 @@ class http_implements extends gridphp_implements{
 			$pos[$i] = 0;
 			$this->_sockets[$i]['readtimer'] = 0;
 			$this->_sockets[$i]['writetimer'] = 0;
+			$this->_buffers[$i] = '';
 		}
 		$write_flag = array(0);
 		$read_flag = array(0);
@@ -481,14 +482,14 @@ class http_implements extends gridphp_implements{
 
 		for($i = 0; $i < count($this->_sockets); $i ++){
 
-			if(!$read_flag[$i]){
+			if(!@$read_flag[$i]){
 				$this->_response[$i]['status'] = GRIDPHP_RPC_ERR_READ_TIMEOUT;
 				$this->_response[$i]['error'] = 'ERR_READ_TIMEOUT';
 				$this->_response[$i]['writetimer'] = $this->_sockets[$i]['writetimer'];
 				$this->_response[$i]['readtimer'] = $timeout - $this->_sockets[$i]['writetimer'];
 			}
 
-			if(!$write_flag[$i]){
+			if(!@$write_flag[$i]){
 				$this->_response[$i]['status'] = GRIDPHP_RPC_ERR_WRITE_TIMEOUT;
 				$this->_response[$i]['error'] = 'ERR_WRITE_TIMEOUT';
 				$this->_response[$i]['writetimer'] = $timeout;
@@ -502,7 +503,7 @@ class http_implements extends gridphp_implements{
 
 		for($i = 0; $i < count($this->_sockets); $i ++){
 
-			if($this->_checks[$i]){
+			if(isset($this->_checks[$i]) && $this->_checks[$i]){
 				$this->_response[$i] = $this->func->_parse_response($this->_buffers[$i]);
 				if($this->_sockets[$i]['thread'])
 					$this->_response[$i] = $this->func->_parse_response($this->_response[$i]['response']);
