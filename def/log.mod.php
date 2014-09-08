@@ -2,6 +2,7 @@
 /**
 * GridPHP Log基础类
 * @author ZhuShunqing
+* @package def
 */
 class gridphp_log extends gridphp_module{
 
@@ -177,7 +178,7 @@ class gridphp_log extends gridphp_module{
 		$trace = debug_backtrace();
 		$trace = $trace[$level];
 		$log = $_SERVER['SERVER_ADDR'] . "\t" . $_SERVER['REQUEST_URI'] . "\t" . $trace['class'] . "\t" . $trace['function'] . "\t" . $info . "\t" . var_export($trace['args'], 1);
-		openlog('JIAYUAN', LOG_PID, LOG_LOCAL5);
+		openlog('SYSLOGCONF', LOG_PID, LOG_LOCAL5);
         syslog(LOG_NOTICE, $log);
         closelog();
 	}
@@ -193,7 +194,7 @@ class gridphp_log extends gridphp_module{
 			$info = $string;
 		}
 		if(substr($info, -1) != "\n") $info .= "\n";
-		if(@is_dir(GRIDPHP_ERROR_PATH)){
+		if(file_exists(GRIDPHP_ERROR_PATH)){
 			return file_put_contents(GRIDPHP_ERROR_PATH . $file, $info, FILE_APPEND);
 		//在SAE上记录日志
 		}else if(function_exists('sae_debug')){

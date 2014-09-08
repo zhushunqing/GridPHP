@@ -2,6 +2,7 @@
 /**
 * GRIDPHP 错误信息类
 * @author ZhuShunqing
+* @package def
 */
 class gridphp_errmsg extends GRIDPHP_Module{
 

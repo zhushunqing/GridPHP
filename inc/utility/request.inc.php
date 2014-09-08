@@ -1,17 +1,19 @@
 <?php
-/*
-* 安全输入
+/**
+* GridPHP 安全输入类
+* @author ZhuShunqing
+* @package inc\utility
 */
 class utility_request{
 
 	/**
 	* 过滤取get参数值
 	* @param $name 参数名
-	* @param $type 数据类型 intval floatval string email ...
+	* @param $type 数据类型 intval整型 floatval浮点型 string字符串 email邮箱 ...
 	* @param $default 默认值
 	* @param $min 最小值/长度
 	* @param $max 最大值/长度
-	* @return value
+	* @return mixed
 	*/
     function getQuery($name, $type = null, $default = null, $min = null, $max = null){
     	return $this->getParam($name, $type, $default, $min, $max, 'get');
@@ -24,7 +26,7 @@ class utility_request{
 	* @param $default 默认值
 	* @param $min 最小值/长度
 	* @param $max 最大值/长度
-	* @return value
+	* @return mixed
 	*/
 	function getPost($name, $type = null, $default = null, $min = null, $max = null){
     	return $this->getParam($name, $type, $default, $min, $max, 'post');
@@ -38,7 +40,20 @@ class utility_request{
 	* @param $min 最小值/长度
 	* @param $max 最大值/长度
 	* @param $method get/post/request
-	* @return value
+	* @return mixed
+	* type类型
+<pre>
+int/intval整型	支持min最小值和max最大值
+float/floatval浮点型	支持min最小值和max最大值
+intary整型数组
+floatary浮点型数组
+string字符串(htmlspecialchars) 支持min最短长度和max最大长度
+quoted字符串(addslashes)
+email邮箱格式
+url网页地址网式	 支持min最短长度和max最大长度
+boolean布尔型
+ip地址格式
+</pre>
 	*/
 	function getParam($name, $type = null, $default = null, $min = null, $max = null, $method = null){
 		$name = trim($name);
@@ -129,6 +144,7 @@ class utility_request{
 
 	/**
 	* 自动去除转义符
+	* @return void
 	*/
 	function strip_request(){
 		if(get_magic_quotes_gpc()){
@@ -138,9 +154,11 @@ class utility_request{
 		}
 	}
 
-	/*
-	 * 递归去除对象中的转义符
-	 */
+	/**
+	* 递归去除对象中的转义符
+	* @param array $ary
+	* @return array $ary
+	*/
 	function strip_array(&$ary){
 		foreach($ary as $i => &$v){
 			if(is_array($v) || is_object($v)){

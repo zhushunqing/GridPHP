@@ -2,20 +2,21 @@
 /**
 * GridPHP database agent基础类
 * @author ZhuShunqing
+* @package def
 */
 class gridphp_dba extends gridphp_module{
 
 	/**
 	* 加载指定单元数据库对象
 	* @param string $unit 数据库单元
-	* @return DB 引用
+	* @return dba_conn DB引用
 	*/
 	public function &loadDB($unit){ return $this->_callImplements(); }
 
 	/**
 	* 设置指定单元数据库配置
 	* @param string $unit 数据库单元
-	* @return DB 引用
+	* @return dba_conn DB引用
 	*/
 	public function &setDB($unit){ return $this->_callImplements(); }
 

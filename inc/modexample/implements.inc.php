@@ -12,7 +12,6 @@ class modexample_implements extends gridphp_implements{
 	*/	
 	public function _Init_() {
 		//"implements _Init_ Once\n";
-		$this->loadC('subclass'); //初始化加载subclass子类
 	}
 
     /**
@@ -22,7 +21,7 @@ class modexample_implements extends gridphp_implements{
     */ 
     public function hello1($s){
         sleep(1);
-		return "1. Hello1, I am {$s}, and I sleeped 1 sec.";
+		return "1. Hello1, I am {$s}, and I sleeped 1 sec. IP:" . $this->parent->parent->getServerIP();
 	}
 
     /**
@@ -32,7 +31,7 @@ class modexample_implements extends gridphp_implements{
     */ 
     public function hello2($s){
         sleep(2);
-		return "2. Hello2, I am {$s}, and I sleeped 2 sec.";
+		return "2. Hello2, I am {$s}, and I sleeped 2 sec. IP:" . $this->parent->parent->getServerIP();
 	}
 
     /**
@@ -43,7 +42,8 @@ class modexample_implements extends gridphp_implements{
     public function hello3(){
         sleep(3);
 		//调用subclass方法
-		return "3. Hello3, " . $this->subclass->do_something() . ', and I sleeped 3 sec.';
+        $this->loadC('subclass', 'I am hello3'); //加载subclass子类
+		return "3. Hello3, " . $this->subclass->do_something() . ", and I sleeped 3 sec. IP:" . $this->parent->parent->getServerIP();
 	}
 
 }

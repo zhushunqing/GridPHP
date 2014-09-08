@@ -14,11 +14,12 @@ require_once('GridPHP.inc.php');
 $GP = &$GLOBALS['GRIDPHP'];
 
 $GP->utility->setTimerPoint('START');
-$mod = $_GET['mod'];
-if($GP->mod($mod)){
-	$GP->$mod->_DEBUG($_GET);
-	$timer = $GP->utility->getTimerDiff('START');
+$request = $GP->utility->loadC('request');
+$mod = $request->getParam('mod');
 
+$timer = $GP->utility->getTimerDiff('START');
+if($mod && $GP->mod($mod)){
+	$GP->$mod->_DEBUG($_GET);
 	print "\n<br/>\nMod {$mod} test done.\n";
 }else{
 	print "mod=?\n";

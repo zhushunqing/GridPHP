@@ -1,6 +1,8 @@
 <?php
 /**
-* 数据工具类
+* GridPHP 数组工具类
+* @author ZhuShunqing
+* @package inc\utility
 */
 class utility_array{
 
@@ -40,7 +42,7 @@ class utility_array{
 	* @author ZhuShunqing
 	*/
 	function merge(&$ary1, &$ary2, $over = 1){
-		if(is_array($ary1))
+		if(is_array($ary1) && is_array($ary2))
 			while (list($key, ) = each($ary2))
 				$this->merge($ary1[$key], $ary2[$key], $over);
 		else if(is_null($ary1) || $over)

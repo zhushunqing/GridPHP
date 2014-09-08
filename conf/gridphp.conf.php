@@ -10,6 +10,7 @@ define('GRIDPHP_MOD_PATH', GRIDPHP_ROOT_PATH . 'mod/');
 define('GRIDPHP_INC_PATH', GRIDPHP_ROOT_PATH . 'inc/');
 define('GRIDPHP_DBG_PATH', GRIDPHP_ROOT_PATH . 'dbg/');
 define('GRIDPHP_AJAX_PATH', GRIDPHP_ROOT_PATH . 'ajax/');
+define('GRIDPHP_ERROR_PATH', '/var/log/gridphp/');
 
 //AJAX接口返回代码
 define('GRIDPHP_AJAX_RET_CODE_SUCC', 1);		//请求成功
@@ -19,19 +20,16 @@ define('GRIDPHP_AJAX_ERR_NOT_LOGIN', -2002);	//用户未登录
 define('GRIDPHP_AJAX_ERR_NOT_FUNC', -2003);		//方法不存在
 define('GRIDPHP_AJAX_ERR_BAD_REQUEST', -2004);	//参数不对或请求错误
 
-define('GRIDPHP_WWW_PATH', '/var/www/gridphp/');
-define('GRIDPHP_ERROR_PATH', '/var/log/gridphp/');
-
-//方法调用cache前缀
+//接口cache前缀
 define('GRIDPHP_FUNCALL_CACHE', 'gridphp_cache_');
-//cache更新计数器
-define('GRIDPHP_REKEY_CACHE', 'gridphp_rekey_');
+//cache主键前缀
+define('GRIDPHP_UNIQKEY_CACHE', 'gridphp_uniqkey_');
 //cache延迟更新队列
-define('GRIDPHP_REKEY_DELAY', 'gridphp_recache_delay');
+define('GRIDPHP_UNIQKEY_DELAY', 'gridphp_recache_delay');
 //cache延迟更新默认时间秒，为0不开启
-define('GRIDPHP_REKEY_DELAY_DEF', 0);
+define('GRIDPHP_UNIQKEY_DELAY_DEF', 0);
 //cache延迟更新队列有效保留时间
-define('GRIDPHP_REKEY_DELAY_TIMER', 600);
+define('GRIDPHP_UNIQKEY_DELAY_TIMER', 600);
 
 //______________________________________________________________________________
 //GRIDPHP_RPC DEFIND
@@ -53,6 +51,7 @@ define('GRIDPHP_RPC_ERR_NO_CONNECT', -1004);	//接口未请求完成
 define('GRIDPHP_RPC_ERR_NO_PARSEDATA', -1005);	//返回数据未能正常解析
 define('GRIDPHP_RPC_ERR_BAD_REQUEST', -1006);//服务器请求错误
 define('GRIDPHP_RPC_ERR_BAD_SERVICE', -1007);//服务器请求错误
+define('GRIDPHP_RPC_ERR_NO_MOD', -1008);//服务器端接口不存在
 
 //远程调用合并模式 0关闭 1合并相同接口源
 define('GRIDPHP_RPC_MERGE_MODE', 0);
@@ -75,8 +74,18 @@ define('GRIDPHP_TODAY_TIMER', strtotime('tomorrow') - time()); //距当日24点�
 
 return array(
 
+	//自动加载类路径
+	'autoload_default' => array(
+		//'/usr/local/lib/phplib/xxx.class.php'
+	),
+
+	//自动加载类路径
+	'autoload_libpath' => array(
+		//'/usr/local/lib/phplib/'
+	),
+
 	//默认加载模块
-	'default_modules' => array('utility', 'debug', 'log', 'http', 'dba', 'dbr', 'incr', 'memcd', 'errmsg'),
+	'default_modules' => array('utility', 'debug', 'log', 'http', 'dba', 'dbr','errmsg', 'memcd', 'incr'),
 
 	//HTTP请求校验key
 	'sign_key'	=> 'loigVulvavyadjilkicmokWofvedtog3',
@@ -88,6 +97,9 @@ return array(
 		'192.168.0.1'		=> 'local',	//本地
 		'192.168.0.2'		=> 'local',	//本地
 	),
+
+	//禁止远程调用的模块
+	'rpc_disabled' => array('<mod name>')
 
 );
 

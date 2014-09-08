@@ -2,6 +2,7 @@
 /**
 * GridPHP 数据库连接类
 * @author ZhuShunqing
+* @package inc\dba
 */
 class dba_conn{
 	var $conn, $qid, $unit, $cache, $error;
@@ -39,10 +40,10 @@ class dba_conn{
 			if($this->dbname){
 				$selectdb = mysql_select_db($this->dbname, $this->conn);
 				if(!$selectdb)
-					$this->_put_error('Select db error');
+					$this->put_error('Select db error');
 			}
 		}else{
-			$this->_put_error('Connect error: ' . $this->host.':'.$this->port . ' ' . $this->user);
+			$this->put_error('Connect error: ' . $this->host.':'.$this->port . ' ' . $this->user);
 		}
 	}
 
@@ -115,7 +116,7 @@ class dba_conn{
 
 		$this->qid = mysql_query($sql, $this->conn) ;
 		if(!$this->qid)
-			$this->_put_error($sql);
+			$this->put_error($sql);
 
 		$debug .= 'query timer: ' . $this->utility->getTimerDiff('db_query_' . $this->unit) . "ms\n";
 		$this->debug->dump($debug, 88);
@@ -143,12 +144,12 @@ class dba_conn{
 	function fetch($sql = null, $cachetime = null){
 		if($sql){
 
-			$sql = $this->_parse_limit($sql);
+			$sql = $this->parse_limit($sql);
 			$rs = false;
 
 			//取cache
 			if($cachetime && $this->cache){
-				$cachekey = $this->_cache_key($sql);
+				$cachekey = $this->cache_key($sql);
 				$rs = $this->cache->get($cachekey);
 				$this->debug->dump("Cache key => {$cachekey}\n Cache Val => " . var_export($rs, 1), 88);
 			}
@@ -179,11 +180,11 @@ class dba_conn{
 	function fetch_all($sql = null, $cachetime = null){
 		$rs = false;
 		if($sql){
-			$sql = $this->_parse_limit($sql);
+			$sql = $this->parse_limit($sql);
 
 			//取cache
 			if($cachetime && $this->cache){
-				$cachekey = $this->_cache_key($sql);
+				$cachekey = $this->cache_key($sql);
 				$rs = $this->cache->get($cachekey);
 				$this->debug->dump("Cache key => {$cachekey}\n Cache Val => " . var_export($rs, 1), 88);
 			}
@@ -211,8 +212,8 @@ class dba_conn{
 	* @return string sql
 	*/
 	function query_test($table, $fields, $condition){
-		$sql = $this->_parse_condition_sql($table, $fields, $condition);
-		$sql = $this->_parse_limit($sql);
+		$sql = $this->parse_condition_sql($table, $fields, $condition);
+		$sql = $this->parse_limit($sql);
 		return $sql;
 	}
 
@@ -221,10 +222,11 @@ class dba_conn{
 	* @param string $table 表名
 	* @param array $fields 选择字段
 	* @param array $condition 查询条件 array('uid' => array('>', 1000010)[,...]) 字段 => (运算符, 比较值),
+	* @param string $cachetime 缓存时间
 	* @return resource link
 	*/
 	function query_one($table, $fields, $condition, $cachetime = null){
-		$sql = $this->_parse_condition_sql($table, $fields, $condition);
+		$sql = $this->parse_condition_sql($table, $fields, $condition);
 		return $this->fetch($sql,$cachetime);
 	}
 
@@ -233,10 +235,11 @@ class dba_conn{
 	* @param string $table 表名
 	* @param array $fields 选择字段
 	* @param array $condition 查询条件 array('uid' => array('>', 1000010)[,...]) 字段 => (运算符, 比较值),
+	* @param string $cachetime 缓存时间
 	* @return resource link
 	*/
 	function query_all($table, $fields, $condition, $cachetime = null){
-		$sql = $this->_parse_condition_sql($table, $fields, $condition);
+		$sql = $this->parse_condition_sql($table, $fields, $condition);
 		return $this->fetch_all($sql, $cachetime);
 	}
 
@@ -249,8 +252,8 @@ class dba_conn{
 	*/
 	function query_count($table, $condition = null, $cachetime = null){
 		$table = mysql_escape_string($table);
-		$cond = $this->_parse_condition($condition);
-		$sql = "select count(*) as `count` from {$table} {$cond}";
+		$cond = $this->parse_condition($condition);
+		$sql = "select count(*) as `count` from `{$this->dbname}`.`{$table}` {$cond}";
 		$rs = $this->fetch($sql, $cachetime);
 		return intval($rs['count']);
 	}
@@ -269,13 +272,13 @@ class dba_conn{
 
 		$table = mysql_escape_string($table);
 
-		$parse = $this->_parseInsertValueStr($row);
+		$parse = $this->parseInsertValueStr($row);
 		$fields = $parse['fields'];
 		$values = $parse['values'];
 		$sql = "insert into $table (`$fields`) values ($values)";
 
 		if($duprow && is_array($duprow)){
-			$values = $this->_parseReplaceValueStr($duprow);
+			$values = $this->parseReplaceValueStr($duprow);
 			$sql .= ' on duplicate key update ' . $values;
 		}
 
@@ -295,7 +298,7 @@ class dba_conn{
 
 		$table = mysql_escape_string($table);
 
-		$parse = $this->_parseInsertValueStr($row);
+		$parse = $this->parseInsertValueStr($row);
 		$fields = $parse['fields'];
 		$values = $parse['values'];
 		$sql = "replace into $table (`$fields`) values ($values)";
@@ -316,11 +319,11 @@ class dba_conn{
 			return false;
 
 		$table = mysql_escape_string($table);
-		$values = $this->_parseReplaceValueStr($row);
-		$cond = $this->_parse_condition($condition);
+		$values = $this->parseReplaceValueStr($row);
+		$cond = $this->parse_condition($condition);
 		if(!empty($cond)){ //必须有条件
 			$sql = "update {$table} set {$values} {$cond}";
-			$sql = $this->_parse_limit($sql); //必须有limit
+			$sql = $this->parse_limit($sql); //必须有limit
 			return $this->query($sql);
 		}else{
 			return false;
@@ -335,10 +338,10 @@ class dba_conn{
 	*/
 	function delete($table, $condition){
 		$table = mysql_escape_string($table);
-		$cond = $this->_parse_condition($condition);
+		$cond = $this->parse_condition($condition);
 		if(!empty($cond)){ //必须有条件
 			$sql = "delete from {$table} {$cond}";
-			$sql = $this->_parse_limit($sql); //必须有limit
+			$sql = $this->parse_limit($sql); //必须有limit
 			return $this->query($sql);
 		}else{
 			return false;
@@ -359,7 +362,7 @@ class dba_conn{
 	/**
 	* 解析sql查询条件
 	*/
-	function _parse_condition_sql($table, $fields, $condition){
+	private function parse_condition_sql($table, $fields, $condition){
 		$table = mysql_escape_string($table);
 		$select = '';
 		foreach($fields as $k => $v){
@@ -370,11 +373,11 @@ class dba_conn{
 			}
 		}
 		$select = mysql_escape_string(substr($select, 1));
-		$cond = $this->_parse_condition($condition);
-		$sql = "select {$select} from {$table} {$cond}";
+		$cond = $this->parse_condition($condition);
+		$sql = "select {$select} from `{$this->dbname}`.`{$table}` {$cond}";
 		return $sql;
 	}
-	function _parse_condition($condition){
+	private function parse_condition($condition){
 		$cond_array = array(
 			'where' => null,
 			'group' => null,
@@ -498,7 +501,7 @@ class dba_conn{
 	* auto parse limit
 	* @return string
 	*/
-	function _parse_limit($sql, $limit = 1){
+	private function parse_limit($sql, $limit = 1){
 		$sql = trim($sql);
 		$limit = intval($limit);
 		$tmp = substr($sql, -20);
@@ -511,7 +514,7 @@ class dba_conn{
 	/**
 	* 根据sql生成cachekey
 	*/
-	function _cache_key($sql){
+	private function cache_key($sql){
 		return 'db_' . md5(trim($sql));
 	}
 
@@ -519,7 +522,7 @@ class dba_conn{
 	* error log
 	* @return void
 	*/
-	function _put_error($sql = ''){
+	private function put_error($sql = ''){
 		$trace = debug_backtrace();
 		$debug = array();
 		foreach($trace as $i => $t){
@@ -573,7 +576,7 @@ class dba_conn{
 	}
 
 	//数值类型综合判断
-	function isnumeric($v){
+	private function isnumeric($v){
 		$type = gettype($v);
 		if($type == 'integer' || $type == 'double'){
 			return true;
@@ -584,12 +587,12 @@ class dba_conn{
 		}
 	}
 
-	function isexpression($v){
+	private function isexpression($v){
 		return is_string($v) && preg_match('/^\(.+?\)$/', $v);
 	}
 
 	//parse insert str
-	function _parseInsertValueStr($row){
+	private function parseInsertValueStr($row){
 		$fields = $values = array();
 		foreach($row as $k => $v){
 			$fields[] = mysql_escape_string($k);
@@ -614,7 +617,7 @@ class dba_conn{
 	}
 
 	//parse replace str
-	function _parseReplaceValueStr($row){
+	private function parseReplaceValueStr($row){
 		$values = array();
 		foreach($row as $k => $v){
 			$k = mysql_escape_string($k);

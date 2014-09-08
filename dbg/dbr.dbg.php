@@ -1,6 +1,7 @@
 <?php
 
-	switch($args['action']){
+	$func = $this->getParam('func');
+	switch($func){
 
 		case 'alias':
 			$alias = 'abc@jiayuan.com';

@@ -18,7 +18,7 @@ register_shutdown_function('shutdown_function_slowlog');
 
 define('GRIDPHP_RPC_SWITCH', 0); //Server模式关闭HTTP方式
 require_once('../GridPHP.inc.php');
-$GP = &$GLOBALS['GRIDPHP'];
+$GP = $GLOBALS['GRIDPHP'];
 
 //get_magic_quotes_gpc自动转义
 $request = $GP->utility->loadC('request');
@@ -50,6 +50,8 @@ if(!$multi)
 			'function'	=> $request->getPost('function'),
 			'args'		=> $request->getPost('args'),
 			'types'		=> $request->getPost('types'),
+			'shared'	=> $request->getPost('shared'),
+			'query'		=> $request->getPost('query'),
 		)
 	);
 
@@ -59,23 +61,30 @@ foreach($multi as $t){
 	$data = null;
 	$mod = $t['module'];
 	$fun = $t['function'];
+	$query = $t['query'];
 
 	if($iserialize){
 		$args = unserialize($t['args']);
+		$shared =  unserialize($t['shared']);
 	}else{
 		$args = $GP->utility->json->decode($t['args']);
+		$shared = $GP->utility->json->decode($t['shared'], 1);
 		//还原参数对象类型
 		$types = $GP->utility->json->decode($t['types'], 1);
 		if($types)
 			$GP->utility->json->recover_array(&$args, $types);
 	}
 
-	if($mod && $GP->mod($mod)){
+	if($mod && (!in_array($mod, $GP->getConf('rpc_disabled')) && $GP->mod($mod))){
+		//设置共享数据
+		if(is_array($shared))
+			$GP->$mod->setRPCShared($shared);
+		parse_str($query, $_REQUEST); //还原Client端的$_GET
 		$data = call_user_func_array(array(&$GP->$mod, $fun), $args);
 
 	}else{
 		//模块不存在
-		$data = array('status' => -1);
+		$data = array('status' => GRIDPHP_RPC_ERR_NO_MOD);
 	}
 
 	$rs[] = $data;

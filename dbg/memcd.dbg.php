@@ -1,24 +1,20 @@
 <?php
 
-	//ini_set('memory_limit', '256M');
-	//$unit = $args['unit'];
-	//$item = intval($args['item']);
-	//if(!$unit) die('unit=?');
-	//$memc = $this->loadMemc($unit);
-
-	$key = $args['k'];
-	$value = $args['v'];
-	$uniq = intval($args['uniq']);
-	$unit = $args['unit'];
-	$offs = intval($args['offs']);
-	$size = intval($args['size']);
+	$key = $this->getParam('k');
+	$value = $this->getParam('v');
+	$uniq = $this->getParam('uniq', 'intval');
+	$unit = $this->getParam('unit');
+	$offs = $this->getParam('offs', 'intval');
+	$size = $this->getParam('size', 'intval');
 
 	$offs = intval($offs);
 	$size = ($size) ? $size : 10000;
 	$unit = ($unit) ? $unit : 'test';
 
+	$func = $this->getParam('func');
+
 	$this->setMemc($unit);
-	switch($args['func']){
+	switch($func){
 
 		case 'set':
 			var_dump($this->set($key, $value, 3600));

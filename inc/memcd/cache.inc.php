@@ -1,7 +1,8 @@
 <?php
 /**
-* GridPHP 数据工具类
+* GridPHP Memcache工具类
 * @author ZhuShunqing
+* @package inc\memcd
 */
 class memcd_cache{
 	var $conf, $cache, $memcached, $connection, $unit;

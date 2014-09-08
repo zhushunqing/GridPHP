@@ -2,6 +2,7 @@
 /**
 * GridPHP 时间工具类
 * @author ZhuShunqing
+* @package inc\utility
 */
 class utility_time{
 

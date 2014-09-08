@@ -2,6 +2,7 @@
 /**
 * GridPHP 通用工具加载类
 * @author ZhuShunqing
+* @package def
 */
 class gridphp_utility extends gridphp_module{
 

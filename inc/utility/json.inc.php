@@ -1,7 +1,8 @@
 <?php
 /**
-* GridPHP json工具类
+* GridPHP JSON工具类
 * @author ZhuShunqing
+* @package inc\utility
 */
 class utility_json{
 

@@ -1,5 +1,8 @@
 <?php
-
+/**
+* GridPHP IP工具类
+* @package inc\utility
+*/
 class utility_ip{
 
 	function get_client_ip()

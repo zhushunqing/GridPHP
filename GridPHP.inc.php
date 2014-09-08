@@ -1,5 +1,4 @@
 <?php
-
 /**
 * GridPHP－通用高效的统一数据模型、分布式计算接口开发框架
 * @author ZhuShunqing
@@ -26,7 +25,7 @@ class GRIDPHP{
 		//default mods
 		$this->defmods = $this->getConf('default_modules');
 		foreach($this->defmods as $m)
-			$this->mod($m, 1);
+			$this->mod($m);
 
 		foreach($this->defmods as $m)
 			foreach($this->defmods as $a)
@@ -35,6 +34,9 @@ class GRIDPHP{
 		//construct mods
 		$args = func_get_args();
 		foreach($args as $m) $this->mod($m);
+
+		//register autoload class
+		spl_autoload_register('GRIDPHP::autoload');
 	}
 
 	/**
@@ -42,10 +44,22 @@ class GRIDPHP{
 	* @param string $m 模块名称
 	* @return int 1成功 2已加载 0模块不存在
 	*/
-	function &mod($m, $def = 0){
+	function &mod($m){
 		if(!isset($this->$m)){
 
-			$file = ($def ? GRIDPHP_DEF_PATH : GRIDPHP_MOD_PATH) . $m . '.mod.php';
+			//默认加载mod位置
+			if(in_array($m, $this->defmods)){
+				$path = GRIDPHP_DEF_PATH;
+			//前缀分类mod位置
+			}else if(count($prefix = explode('_', $m)) > 1){
+				$prefix = array_shift($prefix);
+				$path = GRIDPHP_ROOT_PATH . $prefix[0] . '_mod/';
+			//其它默认位置
+			}else{
+				$path = GRIDPHP_MOD_PATH;
+			}
+			$file = $path . $m . '.mod.php';
+
 			$load = file_exists($file);
 			if($load){
 				//加载主模块类
@@ -54,7 +68,7 @@ class GRIDPHP{
 				$mod = new $c();// &new $c();
 
 				//attach default mods
-				if(!$def && !in_array($m, $this->defmods)){
+				if(!in_array($m, $this->defmods)){
 					foreach($this->defmods as $dm)
 						$mod->$dm = &$this->$dm;
 				}
@@ -65,14 +79,14 @@ class GRIDPHP{
 				$this->$m = &$mod;
 
 				//调用默认初始化方法
-				if(method_exists($mod, '_Init_'))
-				if(!isset($this->_MOD_INITED[$c]) && method_exists($mod, '_Init_')){
-					$this->_MOD_INITED[$c] = 1;
-					$mod->_Init_();
-				}
+				// if(method_exists($mod, '_Init_'))
+				// if(!isset($this->_MOD_INITED[$c]) && method_exists($mod, '_Init_')){
+				// 	$this->_MOD_INITED[$c] = 1;
+				// 	$mod->_Init_();
+				// }
 
 			}else{
-				return false;
+				$this->$m = new gridphp_undefined_class($m);
 			}
 
 		}
@@ -92,16 +106,14 @@ class GRIDPHP{
 			require_once($file);
 			$c = $m . '_' . $c;
 			$class = new $c($args); //&new $c($args);
-
 			//引用自身和默认加载模块
 			$class->parent = &$this->$m;
 			foreach($this->defmods as $dm)
 				$class->$dm = &$this->$dm;
-
-			return $class;
 		}else{
-			return 0;
+			$class = new gridphp_undefined_class($m);
 		}
+		return $class;
 	}
 
 	/**
@@ -140,7 +152,7 @@ class GRIDPHP{
 	}
 
 	//合并请求数据
-	function _rpc_merge(){
+	private function _rpc_merge(){
 		$rpc_merge = array();
 		foreach($this->_RPC_TASKS as $i => $t){
 			$conf = $t['conf'];
@@ -163,7 +175,7 @@ class GRIDPHP{
 	}
 
 	//批量取得数据
-	function _rpc_getdata(){
+	private function _rpc_getdata(){
 		$rs = array();
 		$maxt = 0;
 		foreach($this->_RPC_TASKS as $k => $t){
@@ -197,8 +209,8 @@ class GRIDPHP{
 			if(isset($conf['headers'])){
 				if(isset($conf['headers']['Cookie']) && $conf['headers']['Cookie'] == 1 && isset($_SERVER['HTTP_COOKIE']))
 					$conf['headers']['Cookie'] = $_SERVER['HTTP_COOKIE'];
-				foreach($conf['headers'] as $k => $v)
-					$this->http->setHeader($k, $v);
+				foreach($conf['headers'] as $h => $v)
+					$this->http->setHeader($h, $v);
 			}
 
 			$modules = $functions = '';
@@ -220,7 +232,7 @@ class GRIDPHP{
 	}
 
 	//处理返回数据
-	function _rpc_process(&$rs){
+	private function _rpc_process(&$rs){
 
 		foreach($this->_RPC_TASKS as $k => $t){
 
@@ -245,7 +257,7 @@ class GRIDPHP{
 
 						$data = $rs[$k]->data;
 						//还原节点类型
-						if(isset($rs->types) && is_object($rs->types)){
+						if(is_object($rs->types)){
 							$types = (array) $rs[$k]->types;
 							//$this->utility->json->recover_array(&$data, $types);
 							$this->utility->json->recover_array($data, $types);
@@ -305,12 +317,14 @@ class GRIDPHP{
 	* 命令行参数转成$_GET参数
 	* 例: php test.php uid=1 type=2 将得到 $_GET['uid'] = 1 和 $_GET['type'] = 2
 	*/
-	function parse_args(){
+	private function parse_args(){
 		if(isset($_SERVER['argv']))
 		for($i = 1; $i < count($_SERVER['argv']); $i ++){
 			preg_match('/^-?(\w+?)[:=](.+)$/', $_SERVER['argv'][$i], $a);
-			if($a)
+			if($a){
 				$_GET[$a[1]] = $a[2];
+				$_REQUEST[$a[1]] = $a[2];
+			}
 		}
 	}
 
@@ -333,7 +347,10 @@ class GRIDPHP{
 		return $conf;
 	}
 
-	//取服务器IP
+	/**
+	* 取服务器IP
+	* @return string
+	*/
 	function getServerIP(){
 		if(!$this->_SERVIP){
 			$ip = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : null;
@@ -355,13 +372,22 @@ class GRIDPHP{
 		return $this->_SERVIP;
 	}
 
-	//取客户端IP
+	/**
+	* 取客户端IP
+	* @return string
+	*/
 	function getClientIP(){
-		return isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : @$_SERVER['REMOTE_ADDR'];
+		if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+			return $_SERVER['HTTP_X_FORWARDED_FOR'];
+		else if(isset($_SERVER['REMOTE_ADDR']))
+			return $_SERVER['REMOTE_ADDR'];
+		else
+			return '';
 	}
 
 	/**
 	* 获取当前服务器所处环境
+	* @return string
 	*/
 	function getServerEnv(){
 		if(!$this->_SERVENV)
@@ -369,32 +395,50 @@ class GRIDPHP{
 		return $this->_SERVENV;
 	}
 
-	//Get request URL 
+	/**
+	* 获取当前请求URL
+	* @return string
+	*/
 	function getRequestSRC(){
 		if(!$this->_REQSRC){
 			if(isset($_SERVER['HTTP_HOST'])){
 				$this->_REQSRC = $_SERVER['HTTP_HOST'] . preg_replace('/[?#].*/', '', $_SERVER['REQUEST_URI']);
 			}else{
-				$this->_REQSRC = $_SERVER['PWD'] . '/' . $_SERVER['SCRIPT_NAME'];
+				$this->_REQSRC = $this->getServerIP() . ':' . $_SERVER['PWD'] . '/' . $_SERVER['SCRIPT_NAME'];
 			}
 		}		
 		return $this->_REQSRC;
 	}
+
+	static function autoload($classname){
+		$GP = $GLOBALS['GRIDPHP'];
+		foreach($GP->getConf('autoload_default') as $file) {
+			require_once($file);
+		}
+		foreach($GP->getConf('autoload_libpath') as $path) {
+			$file = $path . $classname . '.class.php';
+			if(file_exists($file)){
+				require($file);
+				break;
+			}
+		}
+	}
 }
 
 /**
-* 模块基础类
+* GridPHP模块基础类
+* @package GRIDPHP
 */
 class gridphp_module{
 	var $_CONFIG = array();
-	var $lazyInit = 0;
+	var $lazyInited = 0;
 	var $name = '';
 
 	/**
 	* Lazy Initialization延迟初始化，只执行一次
 	* @return void
 	*/
-	function _lazyInit(){
+	function lazyInit(){
 		$backtrace = debug_backtrace();
 		$trace = $backtrace[1];
 		$fun = $trace['function']; //strtolower($trace['function']); //转小写与php4保持一致
@@ -405,11 +449,11 @@ class gridphp_module{
 		// $class = get_class($this); //$trace['object'] ? get_class($trace['object']) : $trace['class'];
 		// $mod = substr($class, 4); //strtolower(substr($class, 4));
 		$isrpc = $this->isRPC($fun);
-		if(!$this->lazyInit){
+		if(!$this->lazyInited){
 			if(!$isrpc || !GRIDPHP_RPC_SWITCH){
-				$this->lazyInit = 1;
-				$this->loadC('implements');
+				$this->lazyInited = 1;
 				$this->_Init_();
+				$this->loadC('implements');
 			}
 		}
 	}
@@ -478,6 +522,7 @@ class gridphp_module{
 
 	/**
 	* 返回是否使用RPC
+	* @return int
 	*/
 	function isRPC($fun = null){
 		if(!$fun){
@@ -493,7 +538,8 @@ class gridphp_module{
 	}
 
 	/**
-	* 使用RPC调用接口
+	* 使用RPC远程调用接口
+	* @return void
 	*/
 	function &doRPC($fun = null, $args = null){
 
@@ -520,11 +566,17 @@ class gridphp_module{
 		$data['module'] = $mod;
 		$data['function'] = $fun;
 		$data['encode'] = $conf['encode'];
+		$data['query'] = isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
+
+		//远程调用URL来源
+		$this->setRPCShared('reffer', $this->parent->getRequestSRC());
 
 		if($conf['encode'] == 'serialize'){
 			$data['args'] = serialize($args);
+			$data['shared'] = serialize($this->getRPCShared());
 		}else{
 			$data['args'] = $this->utility->json->encode($args);
+			$data['shared'] = $this->utility->json->encode($this->getRPCShared());
 			//识别参数对象类型
 			$data['types'] = $this->utility->json->objtypes($args);
 			$data['types'] = $this->utility->json->encode($data['types']);
@@ -553,6 +605,7 @@ class gridphp_module{
 
 	/**
 	* 添加HTTP任务队列
+	* @return int
 	*/
 	function addRPC(&$conf, &$data, &$result){
 		return $this->parent->addRPC($conf, $data, $result);
@@ -560,6 +613,7 @@ class gridphp_module{
 
 	/**
 	* 合并远程调用
+	* @return mixed
 	*/
 	function callRPC(){
 		return $this->parent->callRPC();
@@ -567,18 +621,23 @@ class gridphp_module{
 
 	/**
 	* 获取当前服务器所处环境
+	* @return string
 	*/
 	function getServerEnv(){
 		return $this->parent->getServerEnv();
 	}
 
-	//Get request URL
+	/**
+	* 获取当前请求URL
+	* @return string
+	*/
 	function getRequestSRC(){
 		return $this->parent->getRequestSRC();
 	}
 
 	/**
 	* 获取配置信息同级合只适合数据键值
+	* @return mixed
 	*/
 	function &getConfMerge(){
 		$args = func_get_args();
@@ -598,6 +657,7 @@ class gridphp_module{
 
 	/**
 	* 获取配置信息
+	* @return mixed
 	*/
 	function &getConf(){
 		$args = func_get_args();
@@ -659,30 +719,72 @@ class gridphp_module{
 		return $conf;
 	}
 
-	//修改配置
+	/**
+	* 修改配置
+	* @return void
+	*/
 	function setConf(){
 		$args = func_get_args();
 		$conf = &$this->getConf();
-		$value = $args[count($args) - 1];
-		foreach($args as $k){
-			if(is_array($conf)){
-				$conf = &$conf[$k];
-			}else{
-				$conf = $value;
-			}
+		$num = count($args) - 1;
+		$value = $args[$num];
+		for($i = 0; $i < $num; $i ++){
+			$k = $args[$i];
+			if(!isset($conf[$k]))
+				$conf[$k] = array();
+			$conf = &$conf[$k];
 		}
+		$conf = $value;
+		return $value;
+	}
+
+	/**
+	* 设置远程共享数据
+	* @return void
+	*/
+	function setRPCShared(){
+		$args = func_get_args();
+		array_unshift($args, 'RPC_SHARED');
+		return call_user_func_array(array($this, 'setConf'), $args);
+	}
+
+	/**
+	* 设置远程共享数据
+	* @return mixed
+	*/
+	function getRPCShared(){
+		$args = func_get_args();
+		array_unshift($args, 'RPC_SHARED');
+		return call_user_func_array(array($this, 'getConf'), $args);
+	}
+
+	/**
+	* 手动设置Cache
+	* @return void
+	*/
+	function setCacheOn($func, $conf = 1){
+		return $this->setConf('CACHE_CONFIG', $func, $conf);
+	}
+
+	/**
+	* 手动关闭Cache
+	* @return void
+	*/
+	function setCacheOff($func){
+		return $this->setConf('CACHE_CONFIG', $func, 0);
 	}
 
 	/**
 	* 数据调用cache
+	* @return mixed
 	*/
 	function getCache($func, $args){
 		$rt = null;
 		$conf = $this->_get_cache_conf($func);
 		if($conf){
 			//用于识别cache是否该更新的计数器
-			$rekey = $this->_get_rekey_count($conf, $args);
-			$key_sign = $this->name . '|' . $func . '|' . $rekey;
+			$uniqkey = $this->_get_uniqkey_count($conf, $args);
+			$key_sign = $this->name . '|' . $func . '|' . $uniqkey;
 			foreach($args as $v){
 				if(is_numeric($v)) $v = (string) $v;
 				$key_sign .= '|' . var_export($v, 1);
@@ -716,13 +818,14 @@ class gridphp_module{
 
 	/**
 	* 执行结果写入cache
+	* @return void
 	*/
 	function setCache($func, $args, $data){
 		$rt = null;
 		$conf = $this->_get_cache_conf($func);
 		if($conf){
 			//用于识别cache是否该更新的计数器
-			$rekey = $this->_get_rekey_count($conf, $args);
+			$uniqkey = $this->_get_uniqkey_count($conf, $args);
 			$memc = $this->memcd->loadMemc($conf['cache']);
 
 			$argstr = '';
@@ -732,32 +835,33 @@ class gridphp_module{
 			}
 
 			//保存当前Cache
-			$key_sign = $this->name . '|' . $func . '|' . $rekey . $argstr;
+			$key_sign = $this->name . '|' . $func . '|' . $uniqkey . $argstr;
 			$key = GRIDPHP_FUNCALL_CACHE . md5($key_sign);
 			$rt = $memc->set($key, $data, $conf['timer']);
 
 			//删除之前的Cache
-			for($i = $rekey - 1; $i >= 0 && ($rekey - $i) <= 20; $i --){
+			for($i = $uniqkey - 1; $i >= 0 && ($uniqkey - $i) <= 20; $i --){
 				$key_sign_previous = $this->name . '|' . $func . '|' . $i . $argstr;
 				$key = GRIDPHP_FUNCALL_CACHE . md5($key_sign_previous);
 				$rt = $memc->delete($key);
 			}
 
-			$this->debug->dump("Call: {$this->name}->{$func} Rekey: {$rekey} KeySign: {$key_sign} Set Cache: key => {$key} timer: {$conf['timer']}\nvalue => " . var_export($data, 1), 88);
+			$this->debug->dump("Call: {$this->name}->{$func} Rekey: {$uniqkey} KeySign: {$key_sign} Set Cache: key => {$key} timer: {$conf['timer']}\nvalue => " . var_export($data, 1), 88);
 		}
 		return $rt;
 	}
 
 	/**
 	* 删除cache
+	* @return void
 	*/
 	function delCache($func, $args){
 		$rt = null;
 		$conf = $this->_get_cache_conf($func);
 		if($conf){
 			//用于识别cache是否该更新的计数器
-			$rekey = $this->_get_rekey_count($conf, $args);
-			$key_sign = $this->name . '|' . $func . '|' . $rekey;
+			$uniqkey = $this->_get_uniqkey_count($conf, $args);
+			$key_sign = $this->name . '|' . $func . '|' . $uniqkey;
 			foreach($args as $v){
 				if(is_numeric($v)) $v = (string) $v;
 				$key_sign .= '|' . var_export($v, 1);
@@ -772,24 +876,25 @@ class gridphp_module{
 
 	/**
 	* 更新Cache标记
+	* @return void
 	*/
 	function reCache($func, $args){
 		$rt = null;
 		$conf = $this->_get_cache_conf($func);
 		if($conf){
 			$key_sign = $this->name . '|' . $conf['func'];
-			foreach($conf['rekey'] as $i => $v){
+			foreach($conf['uniqkey'] as $i => $v){
 				if(is_numeric($args[$v])) $args[$v] = (string) $args[$v];
 				$key_sign .= '|' . var_export($args[$v], 1);
 			}
-			$key = GRIDPHP_REKEY_CACHE . md5($key_sign);
+			$key = GRIDPHP_UNIQKEY_CACHE . md5($key_sign);
 			$memc = $this->memcd->loadMemc($conf['cache']);
 			$rt = $memc->increment($key, 1, $conf['timer']);
 			$this->debug->dump("Call: {$this->name}->{$func} KeySign: {$key_sign} ReCache: key => {$key}\n value => {$rt}", 88);
 			//延迟更新队列
-			if(GRIDPHP_REKEY_DELAY_DEF > 0){
-				$delay = time() + ($conf['delay'] ? $conf['delay'] : GRIDPHP_REKEY_DELAY_DEF);
-				$memc->listPush(GRIDPHP_REKEY_DELAY, array($key, $delay, $conf['timer']), 0, GRIDPHP_REKEY_DELAY_TIMER);
+			if(GRIDPHP_UNIQKEY_DELAY_DEF > 0){
+				$delay = time() + ($conf['delay'] ? $conf['delay'] : GRIDPHP_UNIQKEY_DELAY_DEF);
+				$memc->listPush(GRIDPHP_UNIQKEY_DELAY, array($key, $delay, $conf['timer']), 0, GRIDPHP_UNIQKEY_DELAY_TIMER);
 			}
 		}
 		return $rt;
@@ -797,8 +902,9 @@ class gridphp_module{
 
 	/**
 	* 返回模块Cache配置
+	* return mixed
 	*/
-	function _get_cache_conf($func){
+	private function _get_cache_conf($func){
 		$defc = $this->getConf('CACHE_CONFIG', 'default');
 		$conf = $this->getConf('CACHE_CONFIG', $func);
 		if($conf){
@@ -808,7 +914,7 @@ class gridphp_module{
 			}
 			if(!isset($conf['enalble'])) $conf['enalble'] = $defc['enalble'];
 			if($conf['enalble']){
-				if(!isset($conf['rekey'])) $conf['rekey'] = $defc['rekey'];
+				if(!isset($conf['uniqkey'])) $conf['uniqkey'] = $defc['uniqkey'];
 				if(!isset($conf['cache'])) $conf['cache'] = $defc['cache'];
 				if(!isset($conf['timer'])) $conf['timer'] = $defc['timer'];
 				if(!isset($conf['func'])) $conf['func'] = $func;
@@ -816,15 +922,18 @@ class gridphp_module{
 				$conf = 0;
 			}
 		}
+		if($conf && !is_array($conf['uniqkey']))
+			$conf['uniqkey'] = array($conf['uniqkey']);
 		return $conf;
 	}
 
 	/**
 	* 返回cache是否该更新的计数器
+	* return int
 	*/
-	function _get_rekey_count($conf, $args){
+	private function _get_uniqkey_count($conf, $args){
 		$key_sign = $this->name . '|' . $conf['func'];
-		foreach($conf['rekey'] as $i => $v){
+		foreach($conf['uniqkey'] as $i => $v){
 			if(is_numeric($v)){
 				if(is_numeric($args[$v]))
 					$args[$v] = (string) $args[$v];
@@ -835,10 +944,10 @@ class gridphp_module{
 				$key_sign .= '|' . $v;
 			}
 		}
-		$key = GRIDPHP_REKEY_CACHE . md5($key_sign);
+		$key = GRIDPHP_UNIQKEY_CACHE . md5($key_sign);
 		$memc = $this->memcd->loadMemc($conf['cache']);
 		$count = intval($memc->get($key));
-		$this->debug->dump("Call: {$this->name}->{$conf['func']} KeySign: {$key_sign} rekey => {$key} value => {$count}", 88);
+		$this->debug->dump("Call: {$this->name}->{$conf['func']} KeySign: {$key_sign} uniqkey => {$key} value => {$count}", 88);
 		return $count;
 	}
 
@@ -854,7 +963,7 @@ class gridphp_module{
 		//debug_backtrace传递进来的$trace['args']是引用，func内部修改破坏参数后会影响setCache的key值与getCache不一致
 
 		$object = &$this->parent->$mod;
-		$object->_lazyInit();
+		$object->lazyInit();
 		$isrpc = $object->isRPC($func);
 
 		//记录接口调用时间
@@ -863,26 +972,31 @@ class gridphp_module{
 		//检查本地缓存
 		$cache = $object->getCache($func, $args);
 		if($cache !== false && $cache !== null){
-			$this->log->callog($mod, $func, 'c'); //记录请求日志
+			if(isset($this->log))
+				$this->log->callog($mod, $func, 'c'); //记录请求日志
 			//直接返回本地缓存
 			return $cache;
 
 		}else if((GRIDPHP_RPC_SWITCH && $isrpc) || $isrpc == 10){
 			//远程调用
 			$ret = &$this->doRPC($func, $args);
-			$this->log->callog($mod, $func, 'h'); //记录请求日志
+			if(isset($this->log))
+				$this->log->callog($mod, $func, 'h'); //记录请求日志
 			//异步请求或远程出错直接返回
 			if(is_array($ret) && $ret['status'])
 				return $ret;
 
-		}else if(method_exists($object->implements, $func)){
+		// }else if(method_exists($object->implements, $func)){
+		}else{
 			//本地调用
 			$ret = call_user_func_array(array($object->implements, $func), $args);
-			$this->log->callog($mod, $func); //记录请求日志
+			if(isset($this->log))
+				$this->log->callog($mod, $func); //记录请求日志
 
-		}else{
-			return "method: '{$mod}->{$func}()' not exists";
 		}
+		// else{
+		// 	return "method: '{$mod}->{$func}()' not exists";
+		// }
 
 		//保存到Cache
 		if($cache !== null)
@@ -899,15 +1013,16 @@ class gridphp_module{
 	* @param $min 最小值/长度
 	* @param $max 最大值/长度
 	* @param $method get/post/request
-	* @return value
+	* @return mixed
 	*/
 	function getParam($name, $type = null, $default = null, $min = null, $max = null, $method = null){
-		$this->request = $this->request ? $this->request : $this->utility->loadC('request');
+		$this->request = isset($this->request) ? $this->request : $this->utility->loadC('request');
 		return $this->request->getParam($name, $type, $default, $min, $max, $method);
 	}
 
 	/**
 	* 客户端信息
+	* @return mixed
 	*/
 	function getClientInfo(){
 		$info = array(
@@ -940,6 +1055,7 @@ class gridphp_module{
 
 	/**
 	* AJAX调用方法
+	* @return mixed
 	*/
 	function AJAX($args){
 		$mod = $this->name;
@@ -997,8 +1113,9 @@ class gridphp_module{
 
 	/**
 	* 模块调试方法
+	* @return void
 	*/
-	function _DEBUG($args){
+	function _DEBUG(){
 		$trace = debug_backtrace();
 		$trace = $trace[0];
 		// $class = get_class($this); //$trace['object'] ? get_class($trace['object']) : $trace['class'];
@@ -1012,8 +1129,23 @@ class gridphp_module{
 
 	/**
 	* 待重载的初始化方法
+	* @return void
 	*/
 	function _Init_(){}
+
+	/**
+	* 方法未定义
+	* @return void|exception
+	*/
+    function __call($name, $args) {
+    	//自动生成的delCache_func方法
+    	if(substr($name, 0, 9) == 'delCache_'){
+    		$name = substr($name, 9);
+    		return $this->delCache($name, $args);
+    	}
+    	throw new Exception("Call to undefined method {$this->name}->{$name}()");
+    	return false;
+	}
 
 }
 
@@ -1051,6 +1183,7 @@ class gridphp_implements{
 
 	/**
 	* 获取配置信息同级合只适合数据键值
+	* @return mixed
 	*/
 	function getConfMerge(){
 		$args = func_get_args();
@@ -1059,6 +1192,7 @@ class gridphp_implements{
 
 	/**
 	* 获取配置信息
+	* @return mixed
 	*/
 	function getConf(){
 		$args = func_get_args();
@@ -1066,7 +1200,42 @@ class gridphp_implements{
 	}
 
 	/**
+	* 设置远程共享数据
+	* @return void
+	*/
+	function setRPCShared(){
+		$args = func_get_args();
+		return call_user_func_array(array(&$this->parent, 'setRPCShared'), $args);
+	}
+
+	/**
+	* 返回远程共享数据
+	* @return mixed
+	*/
+	function getRPCShared(){
+		$args = func_get_args();
+		return call_user_func_array(array(&$this->parent, 'getRPCShared'), $args);
+	}
+
+	/**
+	* 手动设置Cache
+	* @return void
+	*/
+	function setCacheOn($func, $conf){
+		return $this->parent->setCacheOn($func, $conf);
+	}
+	
+	/**
+	* 手动关闭Cache
+	* @return void
+	*/
+	function setCacheOff($func){
+		return $this->parent->setCacheOff($func);
+	}
+	
+	/**
 	* 更新Cache标记
+	* @return void
 	*/
 	function reCache($func = null, $args = null){
 		if(!$func || !$args){
@@ -1080,6 +1249,7 @@ class gridphp_implements{
 
 	/**
 	* 执行结果写入cache
+	* @return void
 	*/
 	function setCache($func = null, $args = null, $data = null){
 		if(!$func || !$args || !$data){
@@ -1094,11 +1264,40 @@ class gridphp_implements{
 
 	/**
 	* delete cache
+	* @return void
 	*/
 	function delCache($func, $args){
 		return $this->parent->delCache($func, $args);
 	}
 
+	/**
+	* 方法未定义
+	* @return void|exception
+	*/
+    function __call($name, $arguments) {
+    	throw new Exception("Call to undefined method {$name}()");
+    	return false;
+	}
+
+}
+
+/**
+* 加载到未识别的类
+* @return void|exception
+*/
+class gridphp_undefined_class{
+	var $_class;
+	function gridphp_undefined_class($class){
+		$this->_class = $class;
+	}
+	/**
+	* 方法未定义
+	* @return void|exception
+	*/
+    function __call($name, $args) {
+    	throw new Exception("Call to undefined method {$this->_class}->{$name}()");
+    	return false;
+	}
 }
 
 //全局引用

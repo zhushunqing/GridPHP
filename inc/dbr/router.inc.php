@@ -73,7 +73,7 @@ class dbr_router{
 		list($dbunit, $mapid, $tabid) = $this->_getMapDB($condition, $rw);
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->query($sql);
 		}else{
@@ -110,7 +110,7 @@ class dbr_router{
 		list($dbunit, $mapid, $tabid) = $this->_getMapDB($condition, 'r');
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->fetch($sql, $cachetime);
 		}else{
@@ -129,7 +129,7 @@ class dbr_router{
 		list($dbunit, $mapid, $tabid) = $this->_getMapDB($condition, 'r');
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->fetch_all($sql, $cachetime);
 		}else{
@@ -150,11 +150,11 @@ class dbr_router{
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
 			$table = $this->_getMapTable($table, $mapid, $tabid);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->query_test($table, $fields, $condition);
 		}else{
-			$this->_put_error('get db route error for' .$$table);
+			$this->_put_error('get db route error for' . $table);
 			return false;
 		}
 	}
@@ -171,7 +171,7 @@ class dbr_router{
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
 			$table = $this->_getMapTable($table, $mapid, $tabid);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->query_one($table, $fields, $condition, $cachetime);
 		}else{
@@ -192,7 +192,7 @@ class dbr_router{
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
 			$table = $this->_getMapTable($table, $mapid, $tabid);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->query_all($table, $fields, $condition, $cachetime);
 		}else{
@@ -213,7 +213,7 @@ class dbr_router{
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
 			$table = $this->_getMapTable($table, $mapid, $tabid);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->query_count($table, $condition, $cachetime);
 		}else{
@@ -234,7 +234,7 @@ class dbr_router{
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
 			$table = $this->_getMapTable($table, $mapid, $tabid);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->insert($table, $row, $duprow);
 		}else{
@@ -254,7 +254,7 @@ class dbr_router{
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
 			$table = $this->_getMapTable($table, $mapid, $tabid);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->replace($table, $row);
 		}else{
@@ -275,7 +275,7 @@ class dbr_router{
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
 			$table = $this->_getMapTable($table, $mapid, $tabid);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->update($table, $row, $condition);
 		}else{
@@ -295,7 +295,7 @@ class dbr_router{
 		if($dbunit){
 			$this->conn[$dbunit] = $this->dba->loadDB($dbunit);
 			$table = $this->_getMapTable($table, $mapid, $tabid);
-			$dbname = $this->_getMapDBName($mapid);
+			$dbname = $this->_getMapDBName($mapid, $tabid);
 			$this->dba->$dbunit->selectdb($dbname);
 			return $this->dba->$dbunit->delete($table, $condition);
 		}else{
@@ -442,9 +442,10 @@ class dbr_router{
 	/**
 	* 生成库名映射
 	*/
-	function _getMapDBName($mapid){
+	function _getMapDBName($mapid, $tabid){
 		$mapdb = $this->conf['mapdb'];
 		$mapdb = str_replace('{mapid}', $mapid, $mapdb);
+		$mapdb = str_replace('{tabid}', $tabid, $mapdb);
 		return $mapdb;
 	}
 

@@ -1,6 +1,6 @@
 <?php
 /**
-* article模块调试代码
+* http模块调试代码
 */
 
 	print "<pre>";
@@ -10,10 +10,10 @@
 	$h = $this;
 	$rs = array();
 
-	$args['type'] = $args[0] ? $args[0] : $args['type'];
+	$type = $this->getParam('type');
 
 	//并发请求
-	switch($args['type']){
+	switch($type){
 		//1 并发get请求
 		//2 并发post请求
 		//3 顺序get请求

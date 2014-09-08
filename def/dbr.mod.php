@@ -2,6 +2,7 @@
 /**
 * GridPHP database route基础类
 * @author ZhuShunqing
+* @package def
 */
 class gridphp_dbr extends gridphp_module{
 
@@ -21,18 +22,21 @@ class gridphp_dbr extends gridphp_module{
 
 	/**
 	* 数据库开始事务 boolean begin()
+	* @param array $condition 分表分库路由条件
 	* @return boolean
 	*/
 	public function &begin($condition){ return $this->_callImplements(); }
 	
 	/**
 	* 回滚数据库 boolean rollback()
+	* @param array $condition 分表分库路由条件
 	* @return boolean
 	*/
 	public function &rollback($condition){ return $this->_callImplements(); }
 	
 	/**
 	* 提交数据库事务 boolean commit()
+	* @param array $condition 分表分库路由条件
 	* @return boolean
 	*/
 	public function &commit($condition) { return $this->_callImplements(); }
@@ -40,7 +44,7 @@ class gridphp_dbr extends gridphp_module{
 	/**
 	* sql查询
 	* @param string $sql 查询语句
-	* @param array $condition 路由条件值
+	* @param array $condition 分表分库路由条件
 	* @param string $rw 'r'从库 'w'主库
 	* @return resource link
 	*/
@@ -49,7 +53,7 @@ class gridphp_dbr extends gridphp_module{
 	/**
 	* 受影响行数
 	* @param string $sql 查询语句
-	* @param array $condition 路由条件值
+	* @param array $condition 分表分库路由条件
 	* @param string $rw 'r'从库 'w'主库
 	* @return int
 	*/
@@ -69,6 +73,7 @@ class gridphp_dbr extends gridphp_module{
 	* @param string $table 表名
 	* @param array $fields 选择字段
 	* @param array $condition 查询条件 array('uid' => array('>', 1000010)[,...]) 字段 => (运算符, 比较值),
+	* @param string $cachetime 缓存时间
 	* @return resource link
 	*/
 	public function &query_all($table, $fields, $condition, $cachetime = null){ return $this->_callImplements(); }
@@ -78,6 +83,7 @@ class gridphp_dbr extends gridphp_module{
 	* @param string $table 表名
 	* @param array $fields 选择字段
 	* @param array $condition 查询条件 array('uid' => array('>', 1000010)[,...]) 字段 => (运算符, 比较值),
+	* @param string $cachetime 缓存时间
 	* @return resource link
 	*/
 	public function &query_one($table, $fields, $condition, $cachetime = null){ return $this->_callImplements(); }
@@ -145,6 +151,7 @@ class gridphp_dbr extends gridphp_module{
 
 	/**
 	* 返回最后插入记录ID
+	* @param array $condition 查询条件
 	* @return int
 	*/
 	public function &insert_id($condition){ return $this->_callImplements(); }

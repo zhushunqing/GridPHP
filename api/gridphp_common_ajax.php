@@ -4,7 +4,7 @@
 * @author ZhuShunqing
 */
 require_once('../GridPHP.inc.php');
-$GP = &$GLOBALS['GRIDPHP'];
+$GP = $GLOBALS['GRIDPHP'];
 
 //get_magic_quotes_gpc自动转义
 $request = $GP->utility->loadC('request');

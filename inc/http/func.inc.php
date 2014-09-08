@@ -72,9 +72,9 @@ class http_func {
 			$headers[$k] = $v;
 		}
 
-		if($headers['Transfer-Encoding'] == 'chunked')
+		if(isset($headers['Transfer-Encoding']) && $headers['Transfer-Encoding'] == 'chunked')
 			$response = $this->http_chunked_decode($response);
-		if($headers['Content-Encoding'] == 'gzip')
+		if(isset($headers['Content-Encoding']) && $headers['Content-Encoding'] == 'gzip')
 			$response = $this->decodeGzip($response);
 
 		return array(

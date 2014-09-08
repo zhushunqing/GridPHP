@@ -1,7 +1,8 @@
 <?php
-/*
+/**
 * GridPHP 字符工具类
 * @author ZhuShunqing
+* @package inc\utility
 */
 class utility_string{
 
@@ -93,6 +94,17 @@ class utility_string{
 		return $str;
 	}
 
+	//数组rawdecode
+	function rawurldecode_ary(&$ary){
+		foreach ($ary as $k => &$v) {
+			if(is_array($v)){
+				$this->rawurldecode_ary($v);
+			}else{
+				$v = rawurldecode($v);
+			}
+		}
+	}
+
 	//解析url数据串不decode
 	function parse_str_undecode($str){
 		$ary = explode('&', $str);
@@ -117,7 +129,7 @@ class utility_string{
 	//检测编码
 	function detect_encoding($str) {
 		foreach (array('UTF-8', 'GBK') as $v) {
-			if ($str === iconv($v, $v . '//IGNORE', $str)) {
+			if ($str === @iconv($v, $v . '//IGNORE', $str)) {
 				return $v;
 			}
 		}
@@ -137,6 +149,27 @@ class utility_string{
 		return $str;
 	}
 
+	//utf8转gbk支持array
+	function gbktoutf8_ary(&$ary){
+		foreach ($ary as $k => &$v) {
+			if(is_array($v)){
+				$this->gbktoutf8_ary($v);
+			}else{
+				$v = $this->gbktoutf8($v);
+			}
+		}
+	}
+
+	//utf8转gbk支持array
+	function utf8togbk_ary(&$ary){
+		foreach ($ary as $k => &$v) {
+			if(is_array($v)){
+				$this->utf8togbk_ary($v);
+			}else{
+				$v = $this->utf8togbk($v);
+			}
+		}
+	}
 }
 
 ?>

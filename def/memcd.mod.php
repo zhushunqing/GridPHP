@@ -2,20 +2,21 @@
 /**
 * GridPHP Memcache基础类
 * @author ZhuShunqing
+* @package def
 */
 class gridphp_memcd extends gridphp_module{
 
 	/**
 	* 加载指定单元数据库对象
 	* @param string $unit 数据库单元
-	* @return DB 引用
+	* @return memcd_cache cache引用
 	*/
 	public function loadMemc($unit){ return $this->_callImplements(); }
 
 	/**
 	* 设置指定单元数据库配置
 	* @param string $unit 数据库单元
-	* @return DB 引用
+	* @return memcd_cache cache引用
 	*/
 	public function setMemc($unit){ return $this->_callImplements(); }
 

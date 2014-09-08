@@ -2,6 +2,7 @@
 /**
 * GridPHP 调试信息工具类
 * @author ZhuShunqing
+* @package def
 */
 class gridphp_debug extends gridphp_module{
 
@@ -14,7 +15,6 @@ class gridphp_debug extends gridphp_module{
 		&&
 			isset($_GET['DEBUG'])
 		) ? 1 : 0;
-
 		$this->level = isset($_GET['DEBUG']) ? intval($_GET['DEBUG']) : 0;
 	}
 
@@ -40,6 +40,7 @@ class gridphp_debug extends gridphp_module{
 	* @return void
 	*/
 	public function dump($v, $l = 0, $d = 0){
+		$this->lazyInit();
 		if($this->debug && $this->level == $l){
 			$trace = debug_backtrace();
 			$info = "\n<!--\nDEBUG " . (++ $this->count) . ' ' . $this->utility->getTimerDiff('debug') . "ms\n";

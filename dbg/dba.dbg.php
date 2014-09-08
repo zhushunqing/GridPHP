@@ -3,7 +3,9 @@
 	$rs = array();
 
 	$db = $this->loadDB('test');
-	switch($args['func']){
+	$db->selectdb('test');
+	$func = $this->getParam('func');
+	switch($func){
 
 		case 'test':
 

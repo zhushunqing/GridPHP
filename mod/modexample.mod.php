@@ -2,27 +2,28 @@
 /**
  * GRIDPHP 模块开发示例
  * @author: ZhuShunqing
+ * @package mod
  */
 class gridphp_modexample extends gridphp_module{
 
     /**
-    * 定义一个方法接口1
+    * 定义了一个方法接口hello1
     * @param string $s
     * @return void
     */ 
-    function &hello1($s){ return $this->_callImplements(); }
+    public function &hello1($s){ return $this->_callImplements(); }
 
     /**
-    * 定义一个方法接口2
+    * 定义了一个方法接口hello2
     * @param string $s
     * @return void
     */ 
-    function &hello2($s){ return $this->_callImplements(); }
+    public function &hello2($s){ return $this->_callImplements(); }
 
     /**
-    * 定义一个方法接口3
+    * 定义了一个方法接口hello3
     * @return void
     */ 
-    function &hello3(){ return $this->_callImplements(); }
+    public function &hello3(){ return $this->_callImplements(); }
     
 }

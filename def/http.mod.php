@@ -2,6 +2,7 @@
 /**
 * GridPHP http接口调用基础类
 * @author ZhuShunqing
+* @package def
 */
 class gridphp_http extends gridphp_module{
 
@@ -62,7 +63,7 @@ class gridphp_http extends gridphp_module{
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 其它同http 404 200等)
 	*/
 	public function &headUrl($url, $timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){
-		$this->_lazyInit();
+		$this->lazyInit();
 		return $this->implements->headUrl($url, $timeout);
 	}
 
@@ -75,7 +76,7 @@ class gridphp_http extends gridphp_module{
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 -1003不支持socket方法 其它同http 404 200等)
 	*/
 	public function &head($host, $port, $request, $timeout){
-		$this->_lazyInit();
+		$this->lazyInit();
 		return $this->implements->head($host, $port, $request, $timeout);
 	}
 
@@ -86,7 +87,7 @@ class gridphp_http extends gridphp_module{
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 其它同http 404 200等)
 	*/
 	public function &getUrl($url, $timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){
-		$this->_lazyInit();
+		$this->lazyInit();
 		return $this->implements->getUrl($url, $timeout);
 	}
 
@@ -98,7 +99,7 @@ class gridphp_http extends gridphp_module{
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 其它同http 404 200等)
 	*/
 	public function &postUrl($url, $form = '', $timeout = GRIDPHP_RPC_DEFAULT_TIMEOUT){
-		$this->_lazyInit();
+		$this->lazyInit();
 		return $this->implements->postUrl($url, $form, $timeout);
 	}
 	/**
@@ -110,7 +111,7 @@ class gridphp_http extends gridphp_module{
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 -1003不支持socket方法 其它同http 404 200等)
 	*/
 	public function &get($host, $port, $request, $timeout){
-		$this->_lazyInit();
+		$this->lazyInit();
 		return $this->implements->get($host, $port, $request, $timeout);
 	}
 	/**
@@ -123,7 +124,7 @@ class gridphp_http extends gridphp_module{
 	* @return array ('headers' => array('head' => 'value'), 'response' => 'string', 'status' => int(-1001读取超时 -1002连接/发送超时 -1003不支持socket方法 其它同http 404 200等)
 	*/
 	public function &post($host, $port, $request, $form, $timeout){
-		$this->_lazyInit();
+		$this->lazyInit();
 		return $this->implements->post($host, $port, $request, $form, $timeout);
 	}
 
