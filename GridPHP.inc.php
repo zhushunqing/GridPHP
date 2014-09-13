@@ -182,6 +182,7 @@ class GRIDPHP{
 			$conf = $t['conf'];
 			$maxt = ($maxt > $conf['timeout']) ? $maxt : $conf['timeout'];
 
+			$data = array();
 			$data['module'] = $t['data'][0]['module'];
 			$data['function'] = $t['data'][0]['function'];
 			$data['args'] = $t['data'][0]['args'];
@@ -222,7 +223,20 @@ class GRIDPHP{
 				$modules .= $v['module'];
 				$functions .= $v['function'];
 			}
-			$conf['uri'] .= '?module=' . $modules . '&function=' . $functions . '&timeout=' . ($maxt / 1000 + 1);
+			$conf['uri'] .= '?module=' . $modules
+						 . '&function=' . $functions
+						 . '&encode=' . $data['encode']
+						 . '&gz=' . $conf['gz']
+						 . '&timeout=' . ($maxt / 1000 + 1);
+
+			if($conf['gz']){
+				if($conf['encode'] == 'serialize'){
+					$data = serialize($data);
+				}else{
+					$data = json_encode($data);
+				}
+				$data = gzcompress($data);
+			}
 
 			$rs[$k] = &$this->http->post($conf['host'], $conf['port'], $conf['uri'], $data, GRIDPHP_RPC_NONBLOCK);
 		}
@@ -247,8 +261,8 @@ class GRIDPHP{
 				}else{
 					$rs[$k] = null;
 				}
-				$this->debug->dump('datadecode : ' . $this->utility->getTimerDiff('datadecode') . 'ms', 101);
-				$this->debug->dump($rs[$k], 101);
+				$this->debug->dump('datadecode : ' . $this->utility->getTimerDiff('datadecode') . 'ms', 102);
+				$this->debug->dump($rs[$k], 102);
 
 				if($rs[$k]){
 
@@ -257,7 +271,7 @@ class GRIDPHP{
 
 						$data = $rs[$k]->data;
 						//还原节点类型
-						if(is_object($rs->types)){
+						if(is_object($rs[$k]->types)){
 							$types = (array) $rs[$k]->types;
 							//$this->utility->json->recover_array(&$data, $types);
 							$this->utility->json->recover_array($data, $types);
@@ -305,10 +319,11 @@ class GRIDPHP{
 	* RPC请求数据签名
 	*/
 	function rpcsign($data){
+		$sign_key = md5($this->getConf('sign_key'));
 		if(isset($data['multidata']))
-			return md5($this->_CONFIG['sign_key'] . substr($data['multidata'], 0, 512));
+			return md5($sign_key . substr($data['multidata'], 0, 512));
 		else if(isset($data['module']) && isset($data['function']))
-			return  md5($this->_CONFIG['sign_key'] . $data['module'] . $data['function'] . substr($data['args'], 0, 512));
+			return md5($sign_key . $data['module'] . $data['function'] . substr($data['args'], 0, 512));
 		else
 			return false;
 	}
@@ -562,10 +577,12 @@ class gridphp_module{
 				$conf['timeout'] = $this->getConf('RPC_CONFIG',$fun, 'timeout');
 		}
 		$conf['encode'] = isset($conf['encode']) ? $conf['encode'] : 'json';
+		$conf['gz'] = isset($conf['gz']) ? $conf['gz'] : 0;
 
 		$data['module'] = $mod;
 		$data['function'] = $fun;
-		$data['encode'] = $conf['encode'];
+		$conf['encode'] = isset($conf['encode']) ? $conf['encode'] : 'json';
+		$conf['gz'] = isset($conf['gz']) ? $conf['gz'] : 0;
 		$data['query'] = isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
 
 		//远程调用URL来源
@@ -983,7 +1000,7 @@ class gridphp_module{
 			if(isset($this->log))
 				$this->log->callog($mod, $func, 'h'); //记录请求日志
 			//异步请求或远程出错直接返回
-			if(is_array($ret) && $ret['status'])
+			if(is_array($ret) && isset($ret['status']) && $ret['status'])
 				return $ret;
 
 		// }else if(method_exists($object->implements, $func)){

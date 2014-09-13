@@ -29,9 +29,18 @@ $timeout = $request->getQuery('timeout', 'intval', 10);
 @set_time_limit($timeout);
 
 //使用serialize或json编码数据 php4下json效率极差
-$encode = $request->getPost('encode', 'string', 'json');
+$encode = $request->getQuery('encode', 'string', 'json');
 header('DATA-ENCODEING: ' . $encode);
 $iserialize = ($encode == 'serialize');
+
+//处理gz压缩数据
+if($request->getQuery('gz', 'intval')){
+	$data = gzuncompress(file_get_contents("php://input"));
+	if($iserialize)
+		$_POST = unserialize($data);
+	else
+		$_POST = json_decode($data);
+}
 
 //请求数据校验
 check_sign();
