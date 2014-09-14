@@ -7,7 +7,7 @@
 */
 class GRIDPHP{
 
-	var $_CONFIG = array(), 
+	private $_CONFIG = array(), 
 		$_SERVENV = null, 
 		$_REQSRC = null, 
 		$_SERVIP = null, 
@@ -303,13 +303,13 @@ class GRIDPHP{
 				}else{
 					//-1005服务端返回数据不合法
 					for($i = 0; $i < count($this->_RPC_TASKS[$k]['result']); $i ++)
-						$this->_RPC_TASKS[$k]['result'][$i] = array('status' => GRIDPHP_RPC_ERR_NO_PARSEDATA);
+						$this->_RPC_TASKS[$k]['result'][$i] = new Exception('GRIDPHP_RPC_ERR_NO_PARSEDATA', GRIDPHP_RPC_ERR_NO_PARSEDATA); //array('status' => GRIDPHP_RPC_ERR_NO_PARSEDATA);
 				}
 
 			}else{
 				//其它错误代码同http 403 404 500等
 				for($i = 0; $i < count($this->_RPC_TASKS[$k]['result']); $i ++)
-					$this->_RPC_TASKS[$k]['result'][$i] = array('status' => $rs[$k]['status']);
+					$this->_RPC_TASKS[$k]['result'][$i] = new Exception('GRIDPHP_RPC_ERR_HTTP_ERRCODE', $rs[$k]['status']); //array('status' => $rs[$k]['status']);
 			}
 		}
 
@@ -445,9 +445,9 @@ class GRIDPHP{
 * @package GRIDPHP
 */
 class gridphp_module{
-	var $_CONFIG = array();
-	var $lazyInited = 0;
-	var $name = '';
+	private $_CONFIG = array();
+	private $_lazyInited = 0;
+	public $name = '';
 
 	/**
 	* Lazy Initialization延迟初始化，只执行一次
@@ -464,9 +464,9 @@ class gridphp_module{
 		// $class = get_class($this); //$trace['object'] ? get_class($trace['object']) : $trace['class'];
 		// $mod = substr($class, 4); //strtolower(substr($class, 4));
 		$isrpc = $this->isRPC($fun);
-		if(!$this->lazyInited){
+		if(!$this->_lazyInited){
 			if(!$isrpc || !GRIDPHP_RPC_SWITCH){
-				$this->lazyInited = 1;
+				$this->_lazyInited = 1;
 				$this->_Init_();
 				$this->loadC('implements');
 			}
@@ -603,7 +603,7 @@ class gridphp_module{
 			//合并请求接口
 			case 2:
 				//-1004返回表示接口未请求完成
-				$result = array('status' => GRIDPHP_RPC_ERR_NO_CONNECT);
+				$result = new Exception('GRIDPHP_RPC_ERR_NO_CONNECT', GRIDPHP_RPC_ERR_NO_CONNECT); //array('status' => GRIDPHP_RPC_ERR_NO_CONNECT);
 				$this->addRPC($conf, $data, $result);
 				return $result;
 			break;
@@ -611,7 +611,7 @@ class gridphp_module{
 			case 1: //实时请求
 			case 3: //已在队列里的请求一起发送
 			default:
-				$result = array('status' => GRIDPHP_RPC_ERR_NO_CONNECT);
+				$result = new Exception('GRIDPHP_RPC_ERR_NO_CONNECT', GRIDPHP_RPC_ERR_NO_CONNECT); //array('status' => GRIDPHP_RPC_ERR_NO_CONNECT);
 				$this->addRPC($conf, $data, $result);
 				$this->callRPC();
 				return $result;

@@ -54,7 +54,7 @@ define('GRIDPHP_RPC_ERR_BAD_SERVICE', -1007);//服务器请求错误
 define('GRIDPHP_RPC_ERR_NO_MOD', -1008);//服务器端接口不存在
 
 //远程调用合并模式 0关闭 1合并相同接口源
-define('GRIDPHP_RPC_MERGE_MODE', 0);
+define('GRIDPHP_RPC_MERGE_MODE', 1);
 
 //并发进程模式 0关闭 1自动 2全部
 define('GRIDPHP_RPC_THREAD_MODE', 0);

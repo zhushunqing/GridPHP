@@ -7,6 +7,12 @@
 class gridphp_modexample extends gridphp_module{
 
     /**
+    * 定义了一个方法接口hello
+    * @return void
+    */ 
+    public function &hello(){ return $this->_callImplements(); }
+
+    /**
     * 定义了一个方法接口hello1
     * @param string $s
     * @return void

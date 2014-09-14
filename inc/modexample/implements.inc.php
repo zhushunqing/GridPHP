@@ -19,6 +19,15 @@ class modexample_implements extends gridphp_implements{
     * @param string $s
     * @return void
     */ 
+    public function hello(){
+        return 'hello done';
+    }
+
+    /**
+    * 方法接口1实现
+    * @param string $s
+    * @return void
+    */ 
     public function hello1($s){
         sleep(1);
 		return "1. Hello1, I am {$s}, and I sleeped 1 sec. IP:" . $this->parent->parent->getServerIP();
